@@ -7,13 +7,13 @@ export default function GroupsPage() {
   const { t } = useTranslation()
   const [groups, setGroups] = useState([])
   const [search, setSearch] = useState('')
-  const [editTag, setEditTag] = useState({})  // {id: tagValue}
+  const [editTag, setEditTag] = useState({})
 
   const load = async () => {
     try {
       const res = await getGroups(false)
       setGroups(res.data)
-    } catch { toast.error('Yüklenemedi') }
+    } catch { toast.error('Yuklenemedi') }
   }
 
   useEffect(() => { load() }, [])
@@ -33,14 +33,13 @@ export default function GroupsPage() {
     g.title.toLowerCase().includes(search.toLowerCase())
   )
 
-  const typeIcon = { group: '👥', supergroup: '👥', channel: '📢' }
   const typeLabel = { group: t('groups.type.group'), supergroup: t('groups.type.supergroup'), channel: t('groups.type.channel') }
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={pageTitle}>{t('groups.title')}</h1>
-        <button onClick={load} style={secBtn}>🔄 {t('groups.refresh')}</button>
+        <button onClick={load} style={secBtn}>{t('groups.refresh')}</button>
       </div>
 
       <input
@@ -61,21 +60,20 @@ export default function GroupsPage() {
                 opacity: g.is_blacklisted ? 0.6 : 1,
                 display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap'
               }}>
-                <span style={{ fontSize: 20 }}>{typeIcon[g.chat_type] || '💬'}</span>
-
                 <div style={{ flex: 1, minWidth: 160 }}>
                   <div style={{ color: '#e2e8f0', fontWeight: 600, fontSize: 14 }}>{g.title}</div>
                   <div style={{ color: '#64748b', fontSize: 12 }}>
-                    {typeLabel[g.chat_type]} {g.member_count ? `• ${g.member_count} ${t('groups.members')}` : ''} {g.username ? `• @${g.username}` : ''}
+                    {typeLabel[g.chat_type]}
+                    {g.member_count ? ` — ${g.member_count} ${t('groups.members')}` : ''}
+                    {g.username ? ` — @${g.username}` : ''}
                   </div>
                   {g.chat_type === 'channel' && !g.is_admin && (
                     <div style={{ color: '#f59e0b', fontSize: 11, marginTop: 2 }}>
-                      ⚠️ {t('groups.adminRequired')}
+                      {t('groups.adminRequired')}
                     </div>
                   )}
                 </div>
 
-                {/* Etiket */}
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                   <input
                     value={editTag[g.id] !== undefined ? editTag[g.id] : (g.tag || '')}
@@ -83,15 +81,14 @@ export default function GroupsPage() {
                     placeholder={t('groups.addTag')}
                     style={{ ...inputStyle, width: 110, padding: '6px 10px', fontSize: 12 }}
                   />
-                  <button onClick={() => handleTagSave(g.id)} style={smallBtn('#2d3150', '#e2e8f0')}>💾</button>
+                  <button onClick={() => handleTagSave(g.id)} style={smallBtn('#2d3150', '#e2e8f0')}>Kaydet</button>
                 </div>
 
-                {/* Blacklist toggle */}
                 <button
                   onClick={() => handleBlacklist(g.id, g.is_blacklisted)}
-                  style={smallBtn(g.is_blacklisted ? '#22c55e22' : '#3d1a1a', g.is_blacklisted ? '#22c55e' : '#f87171')}
+                  style={smallBtn(g.is_blacklisted ? '#1a3d1a' : '#3d1a1a', g.is_blacklisted ? '#4ade80' : '#f87171')}
                 >
-                  {g.is_blacklisted ? '✅ Aktive Et' : '🚫 Devre Dışı'}
+                  {g.is_blacklisted ? 'Aktive Et' : 'Devre Disi'}
                 </button>
               </div>
             ))}

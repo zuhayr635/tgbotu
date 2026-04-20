@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -8,7 +9,7 @@ import os
 
 from app.database import init_db
 from app.services.scheduler_service import start_scheduler, restore_pending_tasks
-from app.routers import auth, groups, broadcasts, schedules, dashboard, settings
+from app.routers import auth, groups, broadcasts, schedules, dashboard, settings, templates
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -21,6 +22,9 @@ async def lifespan(app: FastAPI):
     await init_db()
     start_scheduler()
     await restore_pending_tasks()
+    # Broadcast kuyruğunu başlat
+    from app.services.broadcast_service import start_queue_worker
+    asyncio.create_task(start_queue_worker())
     logger.info("Uygulama hazır")
     yield
     # Kapanış
@@ -50,6 +54,7 @@ app.include_router(broadcasts.router)
 app.include_router(schedules.router)
 app.include_router(dashboard.router)
 app.include_router(settings.router)
+app.include_router(templates.router)
 
 
 @app.get("/api/health")

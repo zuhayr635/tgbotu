@@ -13,8 +13,10 @@ export default function NewBroadcastPage() {
   const [media, setMedia] = useState(null)
   const [disablePreview, setDisablePreview] = useState(false)
   const [parseMode, setParseMode] = useState('HTML')
-  const [mode, setMode] = useState('now')  // 'now' | 'schedule'
+  const [mode, setMode] = useState('now')
   const [runAt, setRunAt] = useState('')
+  const [repeatType, setRepeatType] = useState('none')
+  const [repeatEndAt, setRepeatEndAt] = useState('')
   const [broadcasting, setBroadcasting] = useState(false)
   const [broadcastId, setBroadcastId] = useState(null)
   const [progress, setProgress] = useState(null)
@@ -23,6 +25,18 @@ export default function NewBroadcastPage() {
   useEffect(() => {
     getGroups().then(r => setGroups(r.data.filter(g => !g.is_blacklisted)))
     getTags().then(r => setTags(r.data))
+
+    // Sablon yukleme
+    const tplRaw = localStorage.getItem('tpl_load')
+    if (tplRaw) {
+      try {
+        const tpl = JSON.parse(tplRaw)
+        if (tpl.message_text) setMessage(tpl.message_text)
+        if (tpl.parse_mode) setParseMode(tpl.parse_mode)
+        if (tpl.disable_preview !== undefined) setDisablePreview(tpl.disable_preview)
+        localStorage.removeItem('tpl_load')
+      } catch (_) {}
+    }
   }, [])
 
   const filtered = tagFilter ? groups.filter(g => g.tag === tagFilter) : groups
@@ -55,7 +69,7 @@ export default function NewBroadcastPage() {
 
   const handleSend = async () => {
     if (!message.trim() && !media) return toast.error('Mesaj veya medya gerekli')
-    if (selectedIds.length === 0) return toast.error('En az bir grup seçin')
+    if (selectedIds.length === 0) return toast.error('En az bir grup secin')
 
     const fd = new FormData()
     fd.append('message_text', message)
@@ -72,15 +86,17 @@ export default function NewBroadcastPage() {
         setBroadcasting(true)
         setProgress({ total: selectedIds.length, sent: 0, failed: 0, skipped: 0, status: 'running' })
         startProgressWS(bcId)
-        toast.success('Yayın başlatıldı')
+        toast.success('Yayin baslatildi')
       } else {
-        if (!runAt) return toast.error('Tarih ve saat seçin')
+        if (!runAt) return toast.error('Tarih ve saat secin')
         fd.append('run_at', runAt)
+        fd.append('repeat_type', repeatType)
+        if (repeatEndAt) fd.append('repeat_end_at', repeatEndAt)
         await createSchedule(fd)
-        toast.success('Görev zamanlandı')
+        toast.success('Gorev zamanlandı')
       }
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Hata oluştu')
+      toast.error(e.response?.data?.detail || 'Hata olustu')
     }
   }
 
@@ -95,12 +111,13 @@ export default function NewBroadcastPage() {
     }
   }
 
+  const percent = progress?.total ? Math.round((progress.sent + progress.skipped) / progress.total * 100) : 0
+
   return (
     <div>
       <h1 style={pageTitle}>{t('broadcast.title')}</h1>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20 }}>
-        {/* Sol — mesaj + ayarlar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={card}>
             <textarea
@@ -113,10 +130,10 @@ export default function NewBroadcastPage() {
 
             <div style={{ display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap', alignItems: 'center' }}>
               <label style={{ cursor: 'pointer', background: '#2d3150', color: '#94a3b8', padding: '7px 14px', borderRadius: 8, fontSize: 13 }}>
-                📎 {media ? media.name : t('broadcast.uploadMedia')}
+                {media ? media.name : t('broadcast.uploadMedia')}
                 <input type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={e => setMedia(e.target.files[0])} />
               </label>
-              {media && <button onClick={() => setMedia(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>}
+              {media && <button onClick={() => setMedia(null)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 13 }}>Kaldir</button>}
 
               <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#94a3b8', cursor: 'pointer' }}>
                 <input type="checkbox" checked={disablePreview} onChange={e => setDisablePreview(e.target.checked)} />
@@ -130,7 +147,6 @@ export default function NewBroadcastPage() {
             </div>
           </div>
 
-          {/* Gönderim modu */}
           <div style={card}>
             <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
               {['now', 'schedule'].map(m => (
@@ -139,16 +155,35 @@ export default function NewBroadcastPage() {
                   color: '#fff', border: 'none', borderRadius: 8,
                   padding: '8px 18px', cursor: 'pointer', fontSize: 13, fontWeight: 600
                 }}>
-                  {m === 'now' ? `⚡ ${t('broadcast.sendNow')}` : `⏰ ${t('broadcast.schedule')}`}
+                  {m === 'now' ? t('broadcast.sendNow') : t('broadcast.schedule')}
                 </button>
               ))}
             </div>
 
             {mode === 'schedule' && (
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>{t('broadcast.scheduleDate')}</label>
-                <input type="datetime-local" value={runAt} onChange={e => setRunAt(e.target.value)}
-                  style={{ ...inputStyle, width: '100%' }} />
+              <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div>
+                  <label style={labelStyle}>{t('broadcast.scheduleDate')}</label>
+                  <input type="datetime-local" value={runAt} onChange={e => setRunAt(e.target.value)}
+                    style={{ ...inputStyle, width: '100%' }} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Tekrar</label>
+                  <select value={repeatType} onChange={e => setRepeatType(e.target.value)}
+                    style={{ ...inputStyle, width: '100%' }}>
+                    <option value="none">Tekrarsiz</option>
+                    <option value="daily">Her gun</option>
+                    <option value="weekly">Her hafta</option>
+                    <option value="monthly">Her ay</option>
+                  </select>
+                </div>
+                {repeatType !== 'none' && (
+                  <div>
+                    <label style={labelStyle}>Tekrar bitis tarihi (opsiyonel)</label>
+                    <input type="datetime-local" value={repeatEndAt} onChange={e => setRepeatEndAt(e.target.value)}
+                      style={{ ...inputStyle, width: '100%' }} />
+                  </div>
+                )}
               </div>
             )}
 
@@ -161,25 +196,28 @@ export default function NewBroadcastPage() {
             </button>
           </div>
 
-          {/* Progress */}
           {progress && (
             <div style={card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{t('broadcast.progress')}</span>
-                {broadcasting && <button onClick={handleCancel} style={{ background: '#3d1a1a', color: '#f87171', border: 'none', borderRadius: 6, padding: '4px 12px', cursor: 'pointer', fontSize: 12 }}>{t('broadcast.cancel')}</button>}
+                <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{t('broadcast.progress')} — {percent}%</span>
+                {broadcasting && (
+                  <button onClick={handleCancel} style={{ background: '#3d1a1a', color: '#f87171', border: 'none', borderRadius: 6, padding: '4px 12px', cursor: 'pointer', fontSize: 12 }}>
+                    {t('broadcast.cancel')}
+                  </button>
+                )}
               </div>
               <div style={{ background: '#2d3150', borderRadius: 8, height: 10, overflow: 'hidden', marginBottom: 10 }}>
-                <div style={{ background: '#5b6ef5', height: '100%', width: `${progress.total ? (progress.sent + progress.skipped) / progress.total * 100 : 0}%`, transition: 'width 0.3s' }} />
+                <div style={{ background: '#5b6ef5', height: '100%', width: `${percent}%`, transition: 'width 0.3s' }} />
               </div>
               <div style={{ display: 'flex', gap: 20, fontSize: 13 }}>
-                <span style={{ color: '#22c55e' }}>✅ {progress.sent}</span>
-                <span style={{ color: '#ef4444' }}>❌ {progress.failed}</span>
-                <span style={{ color: '#94a3b8' }}>⏭️ {progress.skipped}</span>
-                <span style={{ color: '#64748b' }}>/ {progress.total}</span>
+                <span style={{ color: '#22c55e' }}>Gonderildi: {progress.sent}</span>
+                <span style={{ color: '#ef4444' }}>Basarisiz: {progress.failed}</span>
+                <span style={{ color: '#94a3b8' }}>Atlanan: {progress.skipped}</span>
+                <span style={{ color: '#64748b' }}>Toplam: {progress.total}</span>
               </div>
               {progress.current_title && broadcasting && (
                 <div style={{ marginTop: 10, fontSize: 13, color: '#94a3b8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>📤 {progress.current_title}</span>
+                  <span>Gonderiliyor: {progress.current_title}</span>
                   <button onClick={() => handleSkip(progress.current_chat_id)} style={{ background: '#2d3150', color: '#94a3b8', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12 }}>
                     {t('broadcast.skip')}
                   </button>
@@ -189,7 +227,6 @@ export default function NewBroadcastPage() {
           )}
         </div>
 
-        {/* Sağ — grup seçimi */}
         <div style={card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: 14 }}>{t('broadcast.selectGroups')} ({selectedIds.length})</span>
@@ -213,7 +250,7 @@ export default function NewBroadcastPage() {
                   <input type="checkbox" checked={selectedIds.includes(g.chat_id)} onChange={() => toggle(g.chat_id)} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, color: '#e2e8f0' }}>{g.title}</div>
-                    <div style={{ fontSize: 11, color: '#64748b' }}>{g.chat_type}{g.tag ? ` • ${g.tag}` : ''}</div>
+                    <div style={{ fontSize: 11, color: '#64748b' }}>{g.chat_type}{g.tag ? ` — ${g.tag}` : ''}</div>
                   </div>
                 </label>
               ))

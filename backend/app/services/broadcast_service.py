@@ -14,15 +14,36 @@ from app.models.broadcast import Broadcast, BroadcastLog, BroadcastStatus, Media
 from app.models.group import Group
 from app.models.settings import BotSettings
 from app.services.bot_service import get_bot, send_notification
+from app.services.message_utils import prepare_message
 
 logger = logging.getLogger(__name__)
 
-# Aktif broadcast'in progress bilgilerini tutan dict {broadcast_id: {...}}
 _active_broadcasts: dict[int, dict] = {}
-# Atla sinyalleri {broadcast_id: set of chat_ids}
 _skip_signals: dict[int, set] = {}
-# İptal sinyalleri
 _cancel_signals: set[int] = set()
+
+# Gönderim kuyruğu — aynı anda tek broadcast çalışır
+_broadcast_queue: asyncio.Queue = asyncio.Queue()
+_queue_running: bool = False
+
+
+async def start_queue_worker():
+    """Uygulama başlangıcında tek sefer başlatılır"""
+    global _queue_running
+    _queue_running = True
+    while True:
+        broadcast_id, chat_ids = await _broadcast_queue.get()
+        try:
+            await _run_broadcast_internal(broadcast_id, chat_ids)
+        except Exception as e:
+            logger.error(f"Kuyruk hatası broadcast {broadcast_id}: {e}")
+        finally:
+            _broadcast_queue.task_done()
+
+
+async def run_broadcast(broadcast_id: int, chat_ids: list[int]):
+    """Broadcast'i kuyruğa ekle"""
+    await _broadcast_queue.put((broadcast_id, chat_ids))
 
 
 def get_broadcast_progress(broadcast_id: int) -> dict | None:
@@ -148,8 +169,8 @@ async def _send_message(bot: Bot, chat_id: int, broadcast: Broadcast, settings: 
     return False, "Bilinmeyen hata", None
 
 
-async def run_broadcast(broadcast_id: int, chat_ids: list[int]):
-    """Ana broadcast döngüsü — arka planda çalışır"""
+async def _run_broadcast_internal(broadcast_id: int, chat_ids: list[int]):
+    """Ana broadcast döngüsü — kuyruk worker tarafından çağrılır"""
     bot = get_bot()
     if not bot:
         logger.error("Bot çalışmıyor, broadcast başlatılamadı")
@@ -199,11 +220,12 @@ async def run_broadcast(broadcast_id: int, chat_ids: list[int]):
             await _log_result(broadcast_id, chat_id, "skipped", None, None)
             continue
 
-        # Grup başlığını al
+        # Grup bilgisini al
         async with AsyncSessionLocal() as session:
             g = await session.execute(select(Group).where(Group.chat_id == chat_id))
             group = g.scalar_one_or_none()
             title = group.title if group else str(chat_id)
+            username = group.username if group else ""
 
         _active_broadcasts[broadcast_id]["current_chat_id"] = chat_id
         _active_broadcasts[broadcast_id]["current_title"] = title
@@ -213,7 +235,20 @@ async def run_broadcast(broadcast_id: int, chat_ids: list[int]):
             result = await session.execute(select(Broadcast).where(Broadcast.id == broadcast_id))
             broadcast = result.scalar_one_or_none()
 
-        success, error, msg_id = await _send_message(bot, chat_id, broadcast, settings)
+        # Spintax + değişken işle — her grup için ayrı mesaj
+        if broadcast.message_text:
+            processed_text = prepare_message(broadcast.message_text, title, username or "")
+        else:
+            processed_text = None
+
+        # Geçici broadcast kopyası ile gönder
+        class _BroadcastProxy:
+            pass
+        proxy = _BroadcastProxy()
+        proxy.__dict__.update(broadcast.__dict__)
+        proxy.message_text = processed_text
+
+        success, error, msg_id = await _send_message(bot, chat_id, proxy, settings)
 
         if success:
             sent += 1

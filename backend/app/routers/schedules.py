@@ -27,6 +27,8 @@ class ScheduleResponse(BaseModel):
     target_chat_ids: list
     run_at: datetime
     status: str
+    repeat_type: str
+    repeat_end_at: Optional[datetime]
     broadcast_id: Optional[int]
     created_at: datetime
 
@@ -38,7 +40,9 @@ class ScheduleResponse(BaseModel):
 async def create_schedule(
     message_text: str = Form(default=""),
     chat_ids: str = Form(...),
-    run_at: str = Form(...),           # ISO format: "2024-12-31T15:00:00"
+    run_at: str = Form(...),
+    repeat_type: str = Form(default="none"),   # none | daily | weekly | monthly
+    repeat_end_at: str = Form(default=""),     # ISO format, bos olabilir
     disable_preview: bool = Form(default=False),
     parse_mode: str = Form(default="HTML"),
     media: Optional[UploadFile] = File(default=None),
@@ -77,6 +81,13 @@ async def create_schedule(
         with open(media_path, "wb") as f:
             f.write(content)
 
+    repeat_end_datetime = None
+    if repeat_end_at:
+        try:
+            repeat_end_datetime = datetime.fromisoformat(repeat_end_at)
+        except Exception:
+            pass
+
     task = ScheduledTask(
         message_text=message_text or None,
         media_type=media_type,
@@ -85,6 +96,8 @@ async def create_schedule(
         parse_mode=parse_mode,
         target_chat_ids=target_ids,
         run_at=run_datetime,
+        repeat_type=repeat_type,
+        repeat_end_at=repeat_end_datetime,
     )
     db.add(task)
     await db.commit()

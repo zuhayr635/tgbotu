@@ -12,6 +12,13 @@ class TaskStatus(str, enum.Enum):
     failed = "failed"
 
 
+class RepeatType(str, enum.Enum):
+    none = "none"
+    daily = "daily"
+    weekly = "weekly"
+    monthly = "monthly"
+
+
 class ScheduledTask(Base):
     __tablename__ = "scheduled_tasks"
 
@@ -23,14 +30,17 @@ class ScheduledTask(Base):
     disable_preview = Column(Boolean, default=False)
     parse_mode = Column(String(10), default="HTML")
 
-    # Hangi gruplara gidecek — chat_id listesi JSON olarak saklanır
     target_chat_ids = Column(JSON, nullable=False, default=list)
 
     run_at = Column(DateTime(timezone=True), nullable=False)
     status = Column(Enum(TaskStatus), default=TaskStatus.pending)
     apscheduler_job_id = Column(String(100), nullable=True)
 
-    broadcast_id = Column(Integer, nullable=True)  # Çalıştıktan sonra oluşan broadcast ID
+    # Tekrarlayan görev
+    repeat_type = Column(Enum(RepeatType), default=RepeatType.none)
+    repeat_end_at = Column(DateTime(timezone=True), nullable=True)  # Tekrar bitiş tarihi
+
+    broadcast_id = Column(Integer, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

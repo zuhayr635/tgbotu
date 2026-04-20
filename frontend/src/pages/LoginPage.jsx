@@ -35,9 +35,8 @@ export default function LoginPage() {
         width: '100%', maxWidth: 380, border: '1px solid #2d3150'
       }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 40 }}>📡</div>
           <h1 style={{ color: '#5b6ef5', margin: '8px 0 4px', fontSize: 22 }}>TG Panel</h1>
-          <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>Telegram Broadcast Yönetimi</p>
+          <p style={{ color: '#64748b', fontSize: 14, margin: 0 }}>Telegram Broadcast Yonetimi</p>
         </div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>

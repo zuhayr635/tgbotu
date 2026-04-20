@@ -6,6 +6,8 @@ import GroupsPage from './pages/GroupsPage'
 import SchedulesPage from './pages/SchedulesPage'
 import HistoryPage from './pages/HistoryPage'
 import SettingsPage from './pages/SettingsPage'
+import TemplatesPage from './pages/TemplatesPage'
+import CalendarPage from './pages/CalendarPage'
 import Layout from './components/Layout'
 
 function RequireAuth({ children }) {
@@ -27,6 +29,8 @@ export default function App() {
           <Route path="schedules" element={<SchedulesPage />} />
           <Route path="history" element={<HistoryPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="templates" element={<TemplatesPage />} />
+          <Route path="calendar" element={<CalendarPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

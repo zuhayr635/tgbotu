@@ -3,7 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from app.bot.handlers import router
+from app.bot.handlers import create_router
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ async def start_bot(token: str) -> dict:
     try:
         _bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
         _dp = Dispatcher()
-        _dp.include_router(router)
+        _dp.include_router(create_router())  # Her seferinde fresh router
 
         bot_info = await _bot.get_me()
 
@@ -82,7 +82,6 @@ def is_bot_running() -> bool:
 
 
 async def send_notification(chat_id: str, text: str):
-    """Kullanıcıya Telegram bildirimi gönder"""
     if _bot and chat_id:
         try:
             await _bot.send_message(chat_id=int(chat_id), text=text)

@@ -55,6 +55,12 @@ export const createSchedule = (formData) => api.post('/schedules', formData)
 export const listSchedules = (status) => api.get(`/schedules${status ? `?status=${status}` : ''}`)
 export const cancelSchedule = (id) => api.delete(`/schedules/${id}`)
 
+// Templates
+export const listTemplates = () => api.get('/templates')
+export const listTemplateCategories = () => api.get('/templates/categories')
+export const createTemplate = (formData) => api.post('/templates', formData)
+export const deleteTemplate = (id) => api.delete(`/templates/${id}`)
+
 // Settings
 export const getSettings = () => api.get('/settings')
 export const updateSettings = (data) => api.put('/settings', data)
