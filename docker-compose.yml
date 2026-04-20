@@ -10,8 +10,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-tgbot}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - tgbot_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tgbot} -d ${POSTGRES_DB:-tgbot}"]
       interval: 10s
@@ -32,30 +30,12 @@ services:
       UPLOAD_DIR: /app/uploads
     volumes:
       - uploads_data:/app/uploads
-    networks:
-      - tgbot_network
-    expose:
-      - "8000"
 
   frontend:
     build: ./frontend
     restart: unless-stopped
     depends_on:
       - backend
-    networks:
-      - tgbot_network
-    expose:
-      - "80"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.tgbot.rule=Host(`${DOMAIN:-tele.luanawork.com}`)"
-      - "traefik.http.routers.tgbot.entrypoints=websecure"
-      - "traefik.http.routers.tgbot.tls.certresolver=letsencrypt"
-      - "traefik.http.services.tgbot.loadbalancer.server.port=80"
-
-networks:
-  tgbot_network:
-    driver: bridge
 
 volumes:
   postgres_data:
