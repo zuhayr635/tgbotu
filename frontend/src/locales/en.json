@@ -1,0 +1,127 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "newBroadcast": "New Broadcast",
+    "groups": "Groups",
+    "schedules": "Scheduled Tasks",
+    "history": "History",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalGroups": "Total Groups/Channels",
+    "todayBroadcasts": "Today's Broadcasts",
+    "pendingTasks": "Pending Tasks",
+    "botStatus": "Bot Status",
+    "botRunning": "Running",
+    "botStopped": "Stopped",
+    "recentBroadcasts": "Recent Broadcasts",
+    "upcomingTasks": "Upcoming Tasks",
+    "storageWarning": "Storage reached {{mb}} MB! Cleanup recommended.",
+    "cleanupStorage": "Clean Up",
+    "noRecent": "No broadcasts yet",
+    "noUpcoming": "No upcoming tasks"
+  },
+  "broadcast": {
+    "title": "New Broadcast",
+    "messagePlaceholder": "Type your message...",
+    "uploadMedia": "Add image or video",
+    "disablePreview": "Disable link preview",
+    "parseMode": "Format",
+    "selectGroups": "Select Groups",
+    "selectAll": "Select All",
+    "deselectAll": "Clear",
+    "sendNow": "Send Now",
+    "schedule": "Schedule",
+    "scheduleDate": "Date and Time",
+    "saveTask": "Save Task",
+    "sending": "Sending...",
+    "progress": "Progress",
+    "skip": "Skip",
+    "cancel": "Cancel",
+    "completed": "Completed",
+    "sent": "Sent",
+    "failed": "Failed",
+    "skipped": "Skipped",
+    "noGroups": "No groups/channels found. Start the bot and add it to groups.",
+    "filterByTag": "Filter by tag"
+  },
+  "groups": {
+    "title": "Groups & Channels",
+    "refresh": "Refresh",
+    "search": "Search...",
+    "tag": "Tag",
+    "addTag": "Add tag",
+    "blacklist": "Disabled",
+    "active": "Active",
+    "type": {
+      "group": "Group",
+      "supergroup": "Supergroup",
+      "channel": "Channel"
+    },
+    "adminRequired": "You need to make the bot an admin in this channel",
+    "members": "members",
+    "noGroups": "No groups/channels yet"
+  },
+  "schedules": {
+    "title": "Scheduled Tasks",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "cancel": "Cancel",
+    "runAt": "Run At",
+    "targetCount": "Target",
+    "noTasks": "No pending tasks"
+  },
+  "history": {
+    "title": "Broadcast History",
+    "details": "Details",
+    "retryFailed": "Retry Failed",
+    "status": {
+      "completed": "Completed",
+      "running": "Running",
+      "failed": "Failed",
+      "pending": "Pending",
+      "cancelled": "Cancelled"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "botToken": "Bot Token",
+    "botTokenPlaceholder": "12345:ABCdef...",
+    "testToken": "Test",
+    "startBot": "Start Bot",
+    "stopBot": "Stop Bot",
+    "notificationChatId": "Notification Chat ID",
+    "notificationChatIdHelp": "Chat ID to receive Telegram notifications when broadcast finishes",
+    "minDelay": "Min Delay (sec)",
+    "maxDelay": "Max Delay (sec)",
+    "maxRetries": "Max Retries",
+    "storageWarnMb": "Storage Warning Limit (MB)",
+    "save": "Save",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "language": "Language"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "yes": "Yes",
+    "no": "No",
+    "groups": "groups",
+    "channels": "channels"
+  },
+  "login": {
+    "title": "Login",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign In",
+    "error": "Invalid username or password"
+  }
+}

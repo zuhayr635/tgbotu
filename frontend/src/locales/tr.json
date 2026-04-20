@@ -1,0 +1,127 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "newBroadcast": "Yeni Yayın",
+    "groups": "Gruplar",
+    "schedules": "Zamanlanmış Görevler",
+    "history": "Geçmiş",
+    "settings": "Ayarlar"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "totalGroups": "Toplam Grup/Kanal",
+    "todayBroadcasts": "Bugün Gönderilen",
+    "pendingTasks": "Bekleyen Görevler",
+    "botStatus": "Bot Durumu",
+    "botRunning": "Çalışıyor",
+    "botStopped": "Durmuş",
+    "recentBroadcasts": "Son Yayınlar",
+    "upcomingTasks": "Yaklaşan Görevler",
+    "storageWarning": "Depolama alanı {{mb}} MB'a ulaştı! Temizlik yapmanız önerilir.",
+    "cleanupStorage": "Temizle",
+    "noRecent": "Henüz yayın yapılmadı",
+    "noUpcoming": "Yaklaşan görev yok"
+  },
+  "broadcast": {
+    "title": "Yeni Yayın",
+    "messagePlaceholder": "Mesajınızı yazın...",
+    "uploadMedia": "Resim veya video ekle",
+    "disablePreview": "Link önizlemeyi kapat",
+    "parseMode": "Format",
+    "selectGroups": "Grup Seç",
+    "selectAll": "Tümünü Seç",
+    "deselectAll": "Temizle",
+    "sendNow": "Şimdi Gönder",
+    "schedule": "Zamanla",
+    "scheduleDate": "Tarih ve Saat",
+    "saveTask": "Görevi Kaydet",
+    "sending": "Gönderiliyor...",
+    "progress": "İlerleme",
+    "skip": "Atla",
+    "cancel": "İptal Et",
+    "completed": "Tamamlandı",
+    "sent": "Gönderildi",
+    "failed": "Başarısız",
+    "skipped": "Atlanan",
+    "noGroups": "Hiç grup/kanal bulunamadı. Bot'u başlatın ve gruplara ekleyin.",
+    "filterByTag": "Etikete göre filtrele"
+  },
+  "groups": {
+    "title": "Gruplar ve Kanallar",
+    "refresh": "Yenile",
+    "search": "Ara...",
+    "tag": "Etiket",
+    "addTag": "Etiket ekle",
+    "blacklist": "Devre dışı",
+    "active": "Aktif",
+    "type": {
+      "group": "Grup",
+      "supergroup": "Süper Grup",
+      "channel": "Kanal"
+    },
+    "adminRequired": "Bu kanal için bot'u admin yapmanız gerekiyor",
+    "members": "üye",
+    "noGroups": "Henüz grup/kanal yok"
+  },
+  "schedules": {
+    "title": "Zamanlanmış Görevler",
+    "pending": "Bekliyor",
+    "completed": "Tamamlandı",
+    "cancelled": "İptal Edildi",
+    "cancel": "İptal Et",
+    "runAt": "Çalışma Zamanı",
+    "targetCount": "Hedef",
+    "noTasks": "Bekleyen görev yok"
+  },
+  "history": {
+    "title": "Gönderim Geçmişi",
+    "details": "Detaylar",
+    "retryFailed": "Başarısızları Tekrar Gönder",
+    "status": {
+      "completed": "Tamamlandı",
+      "running": "Çalışıyor",
+      "failed": "Başarısız",
+      "pending": "Bekliyor",
+      "cancelled": "İptal"
+    }
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "botToken": "Bot Token",
+    "botTokenPlaceholder": "12345:ABCdef...",
+    "testToken": "Test Et",
+    "startBot": "Botu Başlat",
+    "stopBot": "Botu Durdur",
+    "notificationChatId": "Bildirim Chat ID",
+    "notificationChatIdHelp": "Gönderim bitince Telegram bildirimi alacağınız chat ID",
+    "minDelay": "Min Gecikme (sn)",
+    "maxDelay": "Max Gecikme (sn)",
+    "maxRetries": "Max Tekrar",
+    "storageWarnMb": "Depolama Uyarı Limiti (MB)",
+    "save": "Kaydet",
+    "changePassword": "Şifre Değiştir",
+    "currentPassword": "Mevcut Şifre",
+    "newPassword": "Yeni Şifre",
+    "language": "Dil"
+  },
+  "common": {
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "confirm": "Onayla",
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "success": "Başarılı",
+    "yes": "Evet",
+    "no": "Hayır",
+    "groups": "grup",
+    "channels": "kanal"
+  },
+  "login": {
+    "title": "Giriş Yap",
+    "username": "Kullanıcı Adı",
+    "password": "Şifre",
+    "submit": "Giriş",
+    "error": "Kullanıcı adı veya şifre hatalı"
+  }
+}
