@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { getSettings, updateSettings, testBotToken, startBot, stopBot, changePassword } from '../lib/api'
 import toast from 'react-hot-toast'
+import { Settings as SettingsIcon, Bot, Bell, Shield, Save, Check, Key, Clock, RefreshCw } from 'lucide-react'
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
@@ -16,6 +18,8 @@ export default function SettingsPage() {
   const [curPass, setCurPass] = useState('')
   const [newPass, setNewPass] = useState('')
   const [testing, setTesting] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [activeTab, setActiveTab] = useState('bot')
 
   const load = async () => {
     const res = await getSettings()
@@ -34,6 +38,8 @@ export default function SettingsPage() {
     const data = { notification_chat_id: notifChatId, min_delay_seconds: minDelay, max_delay_seconds: maxDelay, max_retries: maxRetries, storage_warn_mb: warnMb }
     if (token) data.bot_token = token
     await updateSettings(data)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
     toast.success(t('common.success'))
     setToken('')
     load()
@@ -65,109 +71,250 @@ export default function SettingsPage() {
     try {
       await changePassword({ current_password: curPass, new_password: newPass })
       toast.success('Sifre degistirildi')
-      setCurPass(''); setNewPass('')
+      setCurPass('')
+      setNewPass('')
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Hata')
     }
   }
 
-  if (!s) return <div style={{ color: '#475569', padding: 40 }}>Yukleniyor...</div>
+  const tabs = [
+    { id: 'bot', label: 'Bot Ayarları', icon: Bot },
+    { id: 'notifications', label: 'Bildirimler', icon: Bell },
+    { id: 'security', label: 'Güvenlik', icon: Shield },
+  ]
+
+  if (!s) return <div className="text-slate-400 p-10">Yukleniyor...</div>
 
   return (
-    <div style={{ maxWidth: 620 }}>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={pageTitle}>{t('settings.title')}</h1>
-        <p style={{ color: '#475569', fontSize: 13, margin: 0 }}>Bot, bildirim ve sistem ayarlari</p>
-      </div>
-
-      <div style={card}>
-        <h2 style={cardTitle}>Bot</h2>
-        <label style={labelStyle}>{t('settings.botToken')}</label>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <input
-            type={tokenVisible ? 'text' : 'password'}
-            value={token}
-            onChange={e => setToken(e.target.value)}
-            placeholder={s.bot_token_set ? '(degistirmek icin yaz)' : t('settings.botTokenPlaceholder')}
-            style={{ ...inputStyle, flex: 1 }}
-          />
-          <button onClick={() => setTokenVisible(!tokenVisible)} style={secBtn}>{tokenVisible ? 'Gizle' : 'Goster'}</button>
-          <button onClick={handleTest} disabled={testing} style={secBtn}>{testing ? '...' : t('settings.testToken')}</button>
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-indigo-600 flex items-center justify-center">
+              <SettingsIcon className="w-5 h-5 text-white" />
+            </div>
+            {t('settings.title')}
+          </h1>
+          <p className="text-slate-400 mt-1">Sistem yapılandırmasını yönetin</p>
         </div>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleSave}
+          className="flex items-center gap-2 px-6 py-3 rounded-xl btn-gradient text-white font-medium shadow-lg shadow-indigo-500/30"
+        >
+          {saved ? <Check className="w-5 h-5" /> : <Save className="w-5 h-5" />}
+          {saved ? 'Kaydedildi' : t('settings.save')}
+        </motion.button>
+      </motion.div>
 
-        {s.bot_username && <div style={{ color: '#64748b', fontSize: 13, marginBottom: 12 }}>@{s.bot_username}</div>}
-
-        <button onClick={handleBotToggle} style={{
-          background: s.bot_is_running ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)',
-          color: s.bot_is_running ? '#f87171' : '#4ade80',
-          border: `1px solid ${s.bot_is_running ? 'rgba(239,68,68,0.25)' : 'rgba(34,197,94,0.25)'}`,
-          borderRadius: 9, padding: '9px 20px', cursor: 'pointer', fontSize: 13, fontWeight: 700,
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          {s.bot_is_running ? t('settings.stopBot') : t('settings.startBot')}
-        </button>
-      </div>
-
-      <div style={card}>
-        <h2 style={cardTitle}>{t('settings.notificationChatId')}</h2>
-        <input value={notifChatId} onChange={e => setNotifChatId(e.target.value)}
-          placeholder="123456789" style={{ ...inputStyle, width: '100%' }} />
-        <p style={{ color: '#64748b', fontSize: 12, marginTop: 6 }}>{t('settings.notificationChatIdHelp')}</p>
-      </div>
-
-      <div style={card}>
-        <h2 style={cardTitle}>Gonderim Ayarlari</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <div>
-            <label style={labelStyle}>{t('settings.minDelay')}</label>
-            <input type="number" value={minDelay} onChange={e => setMinDelay(+e.target.value)} min={1} style={{ ...inputStyle, width: '100%' }} />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Sidebar Tabs */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="lg:col-span-1"
+        >
+          <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-4 space-y-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              return (
+                <motion.button
+                  key={tab.id}
+                  whileHover={{ x: 4 }}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-gradient-to-r from-indigo-600/80 to-purple-600/80 text-white'
+                      : 'text-slate-400 hover:bg-indigo-500/10 hover:text-indigo-300'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{tab.label}</span>
+                </motion.button>
+              )
+            })}
           </div>
-          <div>
-            <label style={labelStyle}>{t('settings.maxDelay')}</label>
-            <input type="number" value={maxDelay} onChange={e => setMaxDelay(+e.target.value)} min={1} style={{ ...inputStyle, width: '100%' }} />
-          </div>
-          <div>
-            <label style={labelStyle}>{t('settings.maxRetries')}</label>
-            <input type="number" value={maxRetries} onChange={e => setMaxRetries(+e.target.value)} min={0} max={5} style={{ ...inputStyle, width: '100%' }} />
-          </div>
-          <div>
-            <label style={labelStyle}>{t('settings.storageWarnMb')}</label>
-            <input type="number" value={warnMb} onChange={e => setWarnMb(+e.target.value)} min={10} style={{ ...inputStyle, width: '100%' }} />
-          </div>
-        </div>
-      </div>
+        </motion.div>
 
-      <div style={card}>
-        <h2 style={cardTitle}>{t('settings.language')}</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {['tr', 'en'].map(lang => (
-            <button key={lang} onClick={() => { i18n.changeLanguage(lang); localStorage.setItem('lang', lang) }}
-              style={{ background: i18n.language === lang ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)', color: i18n.language === lang ? '#a5b4fc' : '#64748b', border: i18n.language === lang ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.08)', borderRadius: 9, padding: '8px 22px', cursor: 'pointer', fontWeight: i18n.language === lang ? 700 : 400, fontSize: 13 }}>
-              {lang === 'tr' ? 'Turkce' : 'English'}
-            </button>
-          ))}
-        </div>
-      </div>
+        {/* Content */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-3"
+        >
+          {activeTab === 'bot' && (
+            <div className="space-y-6">
+              {/* Bot Token */}
+              <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Key className="w-5 h-5 text-indigo-400" />
+                  {t('settings.botToken')}
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Bot Token</label>
+                    <div className="flex gap-2">
+                      <input
+                        type={tokenVisible ? 'text' : 'password'}
+                        value={token}
+                        onChange={e => setToken(e.target.value)}
+                        placeholder={s.bot_token_set ? '(degistirmek icin yaz)' : t('settings.botTokenPlaceholder')}
+                        className="flex-1 bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                      />
+                      <button
+                        onClick={() => setTokenVisible(!tokenVisible)}
+                        className="px-4 py-3 rounded-xl bg-[#1e1e3a] border border-indigo-500/20 text-slate-400 hover:text-indigo-400 transition-colors"
+                      >
+                        {tokenVisible ? 'Gizle' : 'Goster'}
+                      </button>
+                      <button
+                        onClick={handleTest}
+                        disabled={testing}
+                        className="px-4 py-3 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors disabled:opacity-50"
+                      >
+                        {testing ? '...' : t('settings.testToken')}
+                      </button>
+                    </div>
+                  </div>
 
-      <div style={card}>
-        <h2 style={cardTitle}>{t('settings.changePassword')}</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <input type="password" value={curPass} onChange={e => setCurPass(e.target.value)} placeholder={t('settings.currentPassword')} style={{ ...inputStyle, width: '100%' }} />
-          <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)} placeholder={t('settings.newPassword')} style={{ ...inputStyle, width: '100%' }} />
-          <button onClick={handleChangePassword} style={secBtn}>{t('settings.changePassword')}</button>
-        </div>
-      </div>
+                  {s.bot_username && (
+                    <div className="text-slate-400 text-sm">@{s.bot_username}</div>
+                  )}
 
-      <button onClick={handleSave} style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 32px', fontSize: 14, fontWeight: 700, cursor: 'pointer', marginTop: 4, boxShadow: '0 4px 14px rgba(99,102,241,0.35)' }}>
-        {t('settings.save')}
-      </button>
+                  <button
+                    onClick={handleBotToggle}
+                    className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
+                      s.bot_is_running
+                        ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
+                        : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                    }`}
+                  >
+                    {s.bot_is_running ? t('settings.stopBot') : t('settings.startBot')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Rate Limiting */}
+              <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-indigo-400" />
+                  Gonderim Ayarlari
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.minDelay')}</label>
+                    <input
+                      type="number"
+                      value={minDelay}
+                      onChange={e => setMinDelay(+e.target.value)}
+                      min={1}
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.maxDelay')}</label>
+                    <input
+                      type="number"
+                      value={maxDelay}
+                      onChange={e => setMaxDelay(+e.target.value)}
+                      min={1}
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.maxRetries')}</label>
+                    <input
+                      type="number"
+                      value={maxRetries}
+                      onChange={e => setMaxRetries(+e.target.value)}
+                      min={0}
+                      max={5}
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.storageWarnMb')}</label>
+                    <input
+                      type="number"
+                      value={warnMb}
+                      onChange={e => setWarnMb(+e.target.value)}
+                      min={10}
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <div className="space-y-6">
+              <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-indigo-400" />
+                  {t('settings.notificationChatId')}
+                </h3>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Chat ID</label>
+                  <input
+                    value={notifChatId}
+                    onChange={e => setNotifChatId(e.target.value)}
+                    placeholder="123456789"
+                    className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                  />
+                  <p className="text-xs text-slate-500 mt-2">{t('settings.notificationChatIdHelp')}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="space-y-6">
+              <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-indigo-400" />
+                  {t('settings.changePassword')}
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.currentPassword')}</label>
+                    <input
+                      type="password"
+                      value={curPass}
+                      onChange={e => setCurPass(e.target.value)}
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.newPassword')}</label>
+                    <input
+                      type="password"
+                      value={newPass}
+                      onChange={e => setNewPass(e.target.value)}
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                    />
+                  </div>
+                  <button
+                    onClick={handleChangePassword}
+                    className="w-full py-3 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors font-semibold"
+                  >
+                    {t('settings.changePassword')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </div>
     </div>
   )
 }
-
-const pageTitle = { color: '#f1f5f9', fontSize: 26, fontWeight: 700, marginBottom: 8, marginTop: 0, letterSpacing: '-0.5px' }
-const card = { background: 'linear-gradient(135deg, #101624 0%, #0d1220 100%)', borderRadius: 14, padding: 20, border: '1px solid rgba(255,255,255,0.06)', marginBottom: 16 }
-const cardTitle = { color: '#94a3b8', fontSize: 11, fontWeight: 700, margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.8px' }
-const labelStyle = { display: 'block', color: '#64748b', fontSize: 12, marginBottom: 6, fontWeight: 500 }
-const inputStyle = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 9, padding: '10px 12px', color: '#f1f5f9', fontSize: 13, outline: 'none', boxSizing: 'border-box' }
-const secBtn = { background: 'rgba(255,255,255,0.04)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 9, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 500 }

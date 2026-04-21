@@ -1,0 +1,97 @@
+import { Broadcast, Group, Stats, BotSettings } from '../types';
+
+export const mockStats: Stats = {
+  totalBroadcasts: 247,
+  activeBroadcasts: 3,
+  totalGroups: 18,
+  totalMembers: 15680,
+  messagesSent: 389420,
+  successRate: 98.5,
+};
+
+export const mockGroups: Group[] = [
+  { id: '1', name: 'Müşteri Destek Grubu', memberCount: 1250, type: 'private', createdAt: '2024-01-15', lastActivity: '2024-01-20', isActive: true, category: 'Destek' },
+  { id: '2', name: 'Yeni Ürün Duyuruları', memberCount: 3420, type: 'public', createdAt: '2024-01-10', lastActivity: '2024-01-20', isActive: true, category: 'Duyuru' },
+  { id: '3', name: 'VIP Müşteriler', memberCount: 180, type: 'private', createdAt: '2024-01-05', lastActivity: '2024-01-19', isActive: true, category: 'VIP' },
+  { id: '4', name: 'İndirim Kampanyaları', memberCount: 5680, type: 'public', createdAt: '2023-12-20', lastActivity: '2024-01-20', isActive: true, category: 'Pazarlama' },
+  { id: '5', name: 'Eğitim Webinarları', memberCount: 890, type: 'public', createdAt: '2023-12-15', lastActivity: '2024-01-18', isActive: false, category: 'Eğitim' },
+  { id: '6', name: 'Beta Test Kullanıcıları', memberCount: 320, type: 'private', createdAt: '2024-01-08', lastActivity: '2024-01-20', isActive: true, category: 'Test' },
+  { id: '7', name: 'Teknik Destek', memberCount: 450, type: 'private', createdAt: '2023-11-20', lastActivity: '2024-01-20', isActive: true, category: 'Destek' },
+  { id: '8', name: 'Topluluk Tartışmaları', memberCount: 2100, type: 'public', createdAt: '2023-11-01', lastActivity: '2024-01-19', isActive: true, category: 'Topluluk' },
+  { id: '9', name: 'Kurumsal Müşteriler', memberCount: 150, type: 'private', createdAt: '2024-01-12', lastActivity: '2024-01-17', isActive: true, category: 'Kurumsal' },
+  { id: '10', name: 'Haftalık Bülten', memberCount: 4240, type: 'public', createdAt: '2023-10-15', lastActivity: '2024-01-20', isActive: true, category: 'Bülten' },
+];
+
+export const mockBroadcasts: Broadcast[] = [
+  {
+    id: '1',
+    title: 'Yeni Özellik Duyurusu',
+    message: 'Merhaba! Yeni özelliklerimizi keşfedin...',
+    status: 'active',
+    progress: 65,
+    totalRecipients: 15680,
+    sentCount: 10192,
+    failedCount: 45,
+    createdAt: '2024-01-20 10:30',
+    groups: ['2', '4', '6'],
+  },
+  {
+    id: '2',
+    title: 'Bakım Bildirimi',
+    message: 'Sistem bakımı nedeniyle geçici kesinti...',
+    status: 'active',
+    progress: 32,
+    totalRecipients: 12400,
+    sentCount: 3968,
+    failedCount: 12,
+    createdAt: '2024-01-20 11:00',
+    groups: ['1', '3', '7', '9'],
+  },
+  {
+    id: '3',
+    title: 'Haftalık Bülten',
+    message: 'Bu haftanın öne çıkan gelişmeleri...',
+    status: 'pending',
+    progress: 0,
+    totalRecipients: 4240,
+    sentCount: 0,
+    failedCount: 0,
+    createdAt: '2024-01-20 14:00',
+    scheduledFor: '2024-01-20 15:00',
+    groups: ['10'],
+  },
+  {
+    id: '4',
+    title: 'İndirim Kampanyası',
+    message: '%50\'ye varan indirimler başladı!',
+    status: 'completed',
+    progress: 100,
+    totalRecipients: 9100,
+    sentCount: 9085,
+    failedCount: 15,
+    createdAt: '2024-01-19 09:00',
+    groups: ['4', '2'],
+  },
+  {
+    id: '5',
+    title: 'Eğitim Webinarı Hatırlatma',
+    message: 'Yarın saat 14:00\'te webinarımız var...',
+    status: 'failed',
+    progress: 45,
+    totalRecipients: 890,
+    sentCount: 400,
+    failedCount: 490,
+    createdAt: '2024-01-18 16:00',
+    groups: ['5'],
+  },
+];
+
+export const mockSettings: BotSettings = {
+  botToken: '123456789:ABCdefGHIjklMNOpqrsTUVwxyz',
+  botName: 'BroadcastMasterBot',
+  rateLimit: 30,
+  autoRetry: true,
+  retryAttempts: 3,
+  notificationEmail: 'admin@sirketim.com',
+  webhookUrl: 'https://api.sirketim.com/webhook/telegram',
+};

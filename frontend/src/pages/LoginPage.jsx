@@ -1,136 +1,106 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import { login } from '../lib/api'
-import toast from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
+import { MessageCircle } from 'lucide-react'
 
 export default function LoginPage() {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [showPass, setShowPass] = useState(false)
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await login(username, password)
+      const form = new FormData()
+      form.append('username', username)
+      form.append('password', password)
+      const res = await login(form)
       localStorage.setItem('token', res.data.access_token)
-      navigate('/dashboard')
-    } catch {
-      toast.error(t('login.error'))
+      toast.success('Giris basarili')
+      navigate('/')
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Giris basarisiz')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.12) 0%, #070b18 60%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Inter', -apple-system, sans-serif",
-    }}>
-      {/* Background dots */}
-      <div style={{ position: 'fixed', inset: 0, backgroundImage: 'radial-gradient(rgba(99,102,241,0.08) 1px, transparent 1px)', backgroundSize: '32px 32px', pointerEvents: 'none' }} />
-
-      <div style={{
-        background: 'linear-gradient(135deg, #0f1525 0%, #0c1020 100%)',
-        borderRadius: 20,
-        padding: '44px 40px',
-        width: '100%',
-        maxWidth: 400,
-        border: '1px solid rgba(99,102,241,0.15)',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)',
-        position: 'relative',
-        zIndex: 1,
-      }}>
+    <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{
-            width: 52, height: 52, borderRadius: 14,
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 16px',
-            boxShadow: '0 8px 24px rgba(99,102,241,0.4)',
-          }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.18 2 2 0 012.09 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.35 7.66a16 16 0 006 6l.96-.96a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-          </div>
-          <h1 style={{ color: '#f1f5f9', margin: '0 0 6px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.5px' }}>TG Panel</h1>
-          <p style={{ color: '#475569', fontSize: 13, margin: 0 }}>Telegram Broadcast Yonetimi</p>
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+            className="inline-flex items-center gap-3 mb-4"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+              <MessageCircle className="w-8 h-8 text-white" />
+            </div>
+          </motion.div>
+          <h1 className="text-3xl font-bold gradient-text">TG Panel</h1>
+          <p className="text-slate-400 mt-2">Telegram Broadcast Yönetim Paneli</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <label style={{ display: 'block', color: '#64748b', fontSize: 12, marginBottom: 7, fontWeight: 500 }}>
-              {t('login.username')}
-            </label>
-            <div style={{ position: 'relative' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)' }}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        {/* Login Form */}
+        <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-8">
+          <h2 className="text-xl font-semibold text-white mb-6">Giris Yap</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Kullanıcı Adı</label>
               <input
+                type="text"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
-                style={inputStyle}
-                type="text"
-                required
-                autoFocus
                 placeholder="admin"
+                className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white placeholder-slate-500 input-focus"
+                required
               />
             </div>
-          </div>
-          <div>
-            <label style={{ display: 'block', color: '#64748b', fontSize: 12, marginBottom: 7, fontWeight: 500 }}>
-              {t('login.password')}
-            </label>
-            <div style={{ position: 'relative' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Sifre</label>
               <input
+                type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                style={inputStyle}
-                type={showPass ? 'text' : 'password'}
-                required
                 placeholder="••••••••"
+                className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white placeholder-slate-500 input-focus"
+                required
               />
-              <button type="button" onClick={() => setShowPass(!showPass)} style={{
-                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', color: '#475569', cursor: 'pointer', padding: 0,
-              }}>
-                {showPass
-                  ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                }
-              </button>
             </div>
-          </div>
-          <button type="submit" disabled={loading} style={{
-            background: loading ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            color: '#fff', border: 'none', borderRadius: 10,
-            padding: '12px', fontSize: 14, fontWeight: 700, cursor: loading ? 'default' : 'pointer',
-            marginTop: 8, boxShadow: loading ? 'none' : '0 4px 18px rgba(99,102,241,0.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            transition: 'all 0.2s',
-          }}>
-            {loading
-              ? <><div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Giris yapiliyor...</>
-              : t('login.submit')
-            }
-          </button>
-        </form>
-      </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 rounded-xl btn-gradient text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Giris yapiliyor...
+                </>
+              ) : 'Giris Yap'}
+            </motion.button>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-slate-500 text-sm mt-6">
+          © 2024 TG Panel. Tüm hakları saklıdır.
+        </p>
+      </motion.div>
     </div>
   )
-}
-
-const inputStyle = {
-  width: '100%',
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: 10, padding: '11px 12px 11px 38px',
-  color: '#f1f5f9', fontSize: 13,
-  outline: 'none', boxSizing: 'border-box',
-  transition: 'border-color 0.15s',
 }

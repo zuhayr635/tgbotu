@@ -1,12 +1,15 @@
 import { useEffect, useState, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { listBroadcasts, cancelBroadcast, skipGroup } from '../lib/api'
 import toast from 'react-hot-toast'
+import { Radio, Pause, Square, CheckCircle, XCircle, Clock, Users, BarChart3 } from 'lucide-react'
+import ProgressBar from '../components/ProgressBar'
 
 const WS_BASE = (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host
 
 export default function ActivePage() {
   const [broadcasts, setBroadcasts] = useState([])
-  const [progress, setProgress] = useState({}) // broadcastId → progress obj
+  const [progress, setProgress] = useState({})
   const wsRefs = useRef({})
 
   const loadBroadcasts = async () => {
@@ -29,7 +32,6 @@ export default function ActivePage() {
         if (data.status === 'completed' || data.status === 'failed' || data.status === 'cancelled') {
           ws.close()
           delete wsRefs.current[broadcastId]
-          // Tamamlananları listeden kaldır
           setTimeout(() => {
             setBroadcasts(prev => prev.filter(b => b.id !== broadcastId))
           }, 3000)
@@ -44,7 +46,6 @@ export default function ActivePage() {
     loadBroadcasts().then(running => {
       running.forEach(b => connectWs(b.id))
     })
-    // Her 5 saniyede bir yeni running broadcast'leri kontrol et
     const interval = setInterval(() => {
       loadBroadcasts().then(running => {
         running.forEach(b => connectWs(b.id))
@@ -65,123 +66,190 @@ export default function ActivePage() {
     }
   }
 
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'running': return <Radio className="w-5 h-5 text-indigo-400 animate-pulse" />
+      case 'pending': return <Clock className="w-5 h-5 text-amber-400" />
+      case 'completed': return <CheckCircle className="w-5 h-5 text-emerald-400" />
+      case 'failed': return <XCircle className="w-5 h-5 text-rose-400" />
+      default: return <Clock className="w-5 h-5 text-slate-400" />
+    }
+  }
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'running': return 'Çalışıyor'
+      case 'pending': return 'Kuyrukta'
+      case 'completed': return 'Tamamlandı'
+      case 'failed': return 'Başarısız'
+      default: return status
+    }
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'running': return 'text-indigo-400 bg-indigo-500/20'
+      case 'pending': return 'text-amber-400 bg-amber-500/20'
+      case 'completed': return 'text-emerald-400 bg-emerald-500/20'
+      case 'failed': return 'text-rose-400 bg-rose-500/20'
+      default: return 'text-slate-400 bg-slate-500/20'
+    }
+  }
+
   return (
-    <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', margin: 0, letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-          Aktif Yayınlar
-        </h1>
-        <p style={{ color: '#475569', fontSize: 13, margin: '4px 0 0' }}>
-          Şu an çalışan veya kuyrukta bekleyen yayınlar
-        </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-indigo-600 flex items-center justify-center">
+              <Radio className="w-5 h-5 text-white" />
+            </div>
+            Aktif Yayınlar
+          </h1>
+          <p className="text-slate-400 mt-1">Şu an çalışan veya kuyrukta bekleyen yayınlar</p>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <BarChart3 className="w-4 h-4" />
+          <span>Güncelleniyor...</span>
+        </div>
+      </motion.div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Aktif', value: broadcasts.filter(b => b.status === 'running').length, color: 'indigo', icon: Radio },
+          { label: 'Kuyrukta', value: broadcasts.filter(b => b.status === 'pending').length, color: 'amber', icon: Clock },
+          { label: 'Tamamlandı', value: broadcasts.filter(b => b.status === 'completed').length, color: 'emerald', icon: CheckCircle },
+          { label: 'Başarısız', value: broadcasts.filter(b => b.status === 'failed').length, color: 'rose', icon: XCircle },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 * index }}
+            className="p-4 rounded-xl bg-[#1e1e3a] border border-indigo-500/20"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-${stat.color}-500/20`}>
+                <stat.icon className={`w-5 h-5 text-${stat.color}-400`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
+                <p className="text-xs text-slate-400">{stat.label}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      <style>{`
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        @keyframes spin { to { transform: rotate(360deg) } }
-      `}</style>
-
-      {broadcasts.length === 0 ? (
-        <div style={{
-          textAlign: 'center', padding: '80px 20px',
-          background: 'linear-gradient(135deg, #101624 0%, #0d1220 100%)',
-          borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="1.5" style={{ margin: '0 auto 16px', display: 'block' }}>
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
-          <div style={{ color: '#475569', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Aktif yayın yok</div>
-          <div style={{ color: '#334155', fontSize: 13 }}>Yeni bir yayın başlattığınızda burada görünecek</div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {broadcasts.map(b => {
-            const p = progress[b.id]
-            const total = p?.total || b.total_groups || 1
-            const sent = p?.sent ?? b.sent_count ?? 0
-            const failed = p?.failed ?? b.failed_count ?? 0
-            const skipped = p?.skipped ?? b.skipped_count ?? 0
-            const done = sent + failed + skipped
-            const pct = total > 0 ? Math.round((done / total) * 100) : 0
-            const status = p?.status || b.status
-            const currentTitle = p?.current_title
-
-            return (
-              <div key={b.id} style={{
-                background: 'linear-gradient(135deg, #101624 0%, #0d1220 100%)',
-                borderRadius: 16,
-                border: '1px solid rgba(99,102,241,0.2)',
-                padding: '20px 24px',
-                boxShadow: '0 4px 24px rgba(99,102,241,0.08)',
-              }}>
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
-                  <div style={{ flex: 1, minWidth: 0, marginRight: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      {status === 'running' && (
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 6px #6366f1', animation: 'pulse 1.5s infinite', flexShrink: 0 }} />
-                      )}
-                      {status === 'pending' && (
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', flexShrink: 0 }} />
-                      )}
-                      <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 20, background: status === 'running' ? 'rgba(99,102,241,0.15)' : 'rgba(245,158,11,0.15)', color: status === 'running' ? '#818cf8' : '#fbbf24', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        {status === 'running' ? 'Çalışıyor' : 'Kuyrukta'}
-                      </span>
-                      <span style={{ color: '#334155', fontSize: 11 }}>#{b.id}</span>
-                    </div>
-                    <div style={{ color: '#cbd5e1', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 400 }}>
-                      {b.message_text ? b.message_text.slice(0, 100) : `(${b.media_type})`}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleCancel(b.id)}
-                    style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '7px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, flexShrink: 0 }}
-                  >
-                    İptal Et
-                  </button>
-                </div>
-
-                {/* Progress bar */}
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>
-                      {currentTitle ? (
-                        <span>Gönderiliyor: <span style={{ color: '#94a3b8' }}>{currentTitle}</span></span>
-                      ) : 'Hazırlanıyor...'}
-                    </span>
-                    <span style={{ fontSize: 12, color: '#64748b', fontWeight: 700 }}>{pct}%</span>
-                  </div>
-                  <div style={{ height: 6, borderRadius: 6, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${pct}%`,
-                      background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
-                      borderRadius: 6,
-                      transition: 'width 0.5s ease',
-                    }} />
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
-                  {[
-                    { label: 'Gönderildi', value: sent, color: '#22c55e', bg: 'rgba(34,197,94,0.08)' },
-                    { label: 'Hata', value: failed, color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
-                    { label: 'Atlanan', value: skipped, color: '#64748b', bg: 'rgba(255,255,255,0.04)' },
-                    { label: 'Toplam', value: total, color: '#6366f1', bg: 'rgba(99,102,241,0.08)' },
-                  ].map(stat => (
-                    <div key={stat.label} style={{ background: stat.bg, borderRadius: 10, padding: '10px 12px', textAlign: 'center', border: `1px solid ${stat.color}18` }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: stat.color, lineHeight: 1 }}>{stat.value}</div>
-                      <div style={{ fontSize: 10, color: '#475569', marginTop: 4, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
+      {/* Broadcasts List */}
+      <div className="space-y-4">
+        <AnimatePresence>
+          {broadcasts.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-20 bg-[#1e1e3a] rounded-2xl border border-indigo-500/20"
+            >
+              <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
+                <Radio className="w-10 h-10 text-indigo-400" />
               </div>
-            )
-          })}
-        </div>
-      )}
+              <h3 className="text-xl font-semibold text-white mb-2">Aktif yayın yok</h3>
+              <p className="text-slate-400">Yeni bir yayın başlattığınızda burada görünecek</p>
+            </motion.div>
+          ) : (
+            broadcasts.map((b, index) => {
+              const p = progress[b.id]
+              const total = p?.total || b.total_groups || 1
+              const sent = p?.sent ?? b.sent_count ?? 0
+              const failed = p?.failed ?? b.failed_count ?? 0
+              const skipped = p?.skipped ?? b.skipped_count ?? 0
+              const done = sent + failed + skipped
+              const pct = total > 0 ? Math.round((done / total) * 100) : 0
+              const status = p?.status || b.status
+              const currentTitle = p?.current_title
+
+              return (
+                <motion.div
+                  key={b.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ delay: 0.05 * index }}
+                  className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getStatusColor(status)}`}>
+                        {getStatusIcon(status)}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Yayın #{b.id}</h3>
+                        <p className="text-sm text-slate-400 line-clamp-1">{b.message_text || '(medya)'}</p>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                          <span>Oluşturulma: {b.created_at ? new Date(b.created_at).toLocaleString('tr-TR') : '-'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleCancel(b.id)}
+                        className="p-2 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors"
+                      >
+                        <Square className="w-5 h-5" />
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {/* Progress */}
+                  <div className="mb-4">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-xs text-slate-500">
+                        {currentTitle ? `Gönderiliyor: ${currentTitle}` : 'Hazırlanıyor...'}
+                      </span>
+                      <span className="text-xs font-medium text-slate-300">{pct}%</span>
+                    </div>
+                    <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Users className="w-4 h-4 text-indigo-400" />
+                      <span className="text-slate-400">Toplam:</span>
+                      <span className="text-white font-medium">{total}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <span className="text-slate-400">Gönderildi:</span>
+                      <span className="text-white font-medium">{sent}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <XCircle className="w-4 h-4 text-rose-400" />
+                      <span className="text-slate-400">Başarısız:</span>
+                      <span className="text-white font-medium">{failed}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }

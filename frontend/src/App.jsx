@@ -1,4 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useState } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import NewBroadcastPage from './pages/NewBroadcastPage'
@@ -9,7 +12,7 @@ import SettingsPage from './pages/SettingsPage'
 import TemplatesPage from './pages/TemplatesPage'
 import CalendarPage from './pages/CalendarPage'
 import ActivePage from './pages/ActivePage'
-import Layout from './components/Layout'
+import './index.css'
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem('token')
@@ -17,23 +20,52 @@ function RequireAuth({ children }) {
   return children
 }
 
+function AppContent() {
+  const [currentPage, setCurrentPage] = useState('dashboard')
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    navigate('/login')
+  }
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <DashboardPage />
+      case 'broadcast':
+        return <NewBroadcastPage />
+      case 'groups':
+        return <GroupsPage />
+      case 'active':
+        return <ActivePage />
+      case 'settings':
+        return <SettingsPage />
+      default:
+        return <DashboardPage />
+    }
+  }
+
+  return (
+    <Layout currentPage={currentPage} onPageChange={setCurrentPage} onLogout={handleLogout}>
+      {renderPage()}
+    </Layout>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="broadcast/new" element={<NewBroadcastPage />} />
-          <Route path="groups" element={<GroupsPage />} />
-          <Route path="schedules" element={<SchedulesPage />} />
-          <Route path="history" element={<HistoryPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="templates" element={<TemplatesPage />} />
-          <Route path="calendar" element={<CalendarPage />} />
-          <Route path="active" element={<ActivePage />} />
-        </Route>
+        <Route
+          path="/*"
+          element={
+            <RequireAuth>
+              <AppContent />
+            </RequireAuth>
+          }
+        />
       </Routes>
     </BrowserRouter>
   )

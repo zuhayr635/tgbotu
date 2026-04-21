@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { getGroups, updateGroup, addGroup } from '../lib/api'
 import toast from 'react-hot-toast'
+import { Users, Plus, Search, RefreshCw, Globe, Lock, Edit2, Trash2, ExternalLink } from 'lucide-react'
 
 const TYPE_COLOR = {
-  group: { color: '#6366f1', bg: 'rgba(99,102,241,0.1)', label: 'Grup' },
-  supergroup: { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', label: 'Supergroup' },
-  channel: { color: '#06b6d4', bg: 'rgba(6,182,212,0.1)', label: 'Kanal' },
+  group: { color: '#6366f1', bg: 'bg-indigo-500/20', text: 'text-indigo-400', label: 'Grup' },
+  supergroup: { color: '#8b5cf6', bg: 'bg-purple-500/20', text: 'text-purple-400', label: 'Supergroup' },
+  channel: { color: '#06b6d4', bg: 'bg-cyan-500/20', text: 'text-cyan-400', label: 'Kanal' },
 }
 
 export default function GroupsPage() {
@@ -17,7 +19,7 @@ export default function GroupsPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [addInput, setAddInput] = useState('')
   const [adding, setAdding] = useState(false)
-  const [filter, setFilter] = useState('all') // all | admin | active | blacklisted
+  const [filter, setFilter] = useState('all')
 
   const load = async () => {
     try {
@@ -71,254 +73,254 @@ export default function GroupsPage() {
   const inactiveCount = groups.filter(g => !g.is_active).length
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+      >
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', margin: 0, letterSpacing: '-0.5px' }}>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+              <Users className="w-5 h-5 text-white" />
+            </div>
             {t('groups.title')}
           </h1>
-          <p style={{ color: '#475569', fontSize: 13, margin: '4px 0 0' }}>
-            {groups.length} kayitli · <span style={{ color: '#4ade80' }}>{activeCount} aktif</span> · <span style={{ color: '#f87171' }}>{inactiveCount} bot yok</span> · {adminCount} admin
+          <p className="text-slate-400 mt-1">
+            {groups.length} kayitli · <span className="text-emerald-400">{activeCount} aktif</span> · <span className="text-rose-400">{inactiveCount} bot yok</span> · {adminCount} admin
           </p>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setShowAdd(!showAdd)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 7,
-            background: showAdd ? 'rgba(239,68,68,0.1)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            color: showAdd ? '#f87171' : '#fff',
-            border: showAdd ? '1px solid rgba(239,68,68,0.2)' : 'none',
-            borderRadius: 10, padding: '9px 18px', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-            boxShadow: showAdd ? 'none' : '0 4px 14px rgba(99,102,241,0.35)',
-          }}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium shadow-lg ${
+            showAdd
+              ? 'bg-rose-500/20 text-rose-400 shadow-rose-500/30'
+              : 'btn-gradient text-white shadow-indigo-500/30'
+          }`}
         >
           {showAdd
-            ? <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Iptal</>
-            : <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Grup Ekle</>
+            ? <><ExternalLink className="w-5 h-5" /> Iptal</>
+            : <><Plus className="w-5 h-5" /> Grup Ekle</>
           }
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* Add Group Panel */}
       {showAdd && (
-        <div style={{
-          background: 'linear-gradient(135deg, #101624 0%, #0d1220 100%)',
-          borderRadius: 14, padding: 20,
-          border: '1px solid rgba(99,102,241,0.2)',
-          marginBottom: 20,
-          boxShadow: '0 4px 24px rgba(99,102,241,0.08)',
-        }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 12 }}>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/30 p-6"
+        >
+          <div className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3">
             Grup / Kanal Ekle
           </div>
-          <p style={{ color: '#64748b', fontSize: 12, margin: '0 0 14px' }}>
+          <p className="text-slate-500 text-sm mb-4">
             Botun üye oldugu bir grubun ID'sini veya @kullaniciadi'ni girin. Bot o grupta olmak zorunda.
           </p>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="flex gap-3">
             <input
               value={addInput}
               onChange={e => setAddInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAdd()}
               placeholder="-100123456789 veya @grupadi"
-              style={{ ...input, flex: 1 }}
+              className="flex-1 bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white placeholder-slate-500 input-focus"
             />
             <button
               onClick={handleAdd}
               disabled={adding}
-              style={{
-                background: adding ? 'rgba(99,102,241,0.3)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                color: '#fff', border: 'none', borderRadius: 9,
-                padding: '10px 20px', cursor: adding ? 'default' : 'pointer',
-                fontSize: 13, fontWeight: 700,
-                display: 'flex', alignItems: 'center', gap: 8,
-              }}
+              className="px-6 py-3 rounded-xl btn-gradient text-white font-medium flex items-center gap-2 disabled:opacity-50"
             >
-              {adding
-                ? <><div style={{ width: 12, height: 12, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Ekleniyor...</>
-                : 'Ekle'
-              }
+              {adding ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Ekleniyor...
+                </>
+              ) : 'Ekle'}
             </button>
           </div>
-          <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(99,102,241,0.06)', borderRadius: 8, border: '1px solid rgba(99,102,241,0.12)', fontSize: 11, color: '#64748b', lineHeight: 1.7 }}>
-            <strong style={{ color: '#818cf8' }}>Ipucu:</strong> Grup ID'sini bulmak icin gruba <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: 4 }}>@userinfobot</code> ekleyip /start yazin.
+          <div className="mt-3 p-3 bg-indigo-500/10 rounded-lg border border-indigo-500/20 text-xs text-slate-500 leading-relaxed">
+            <strong className="text-indigo-300">Ipucu:</strong> Grup ID'sini bulmak icin gruba <code className="bg-slate-800 px-2 py-0.5 rounded">@userinfobot</code> ekleyip /start yazin.
             Kanal icin bota yönetici yetkisi verin.
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {/* Filter tabs + Search */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* Filters Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex flex-col lg:flex-row gap-4"
+      >
+        {/* Search */}
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('groups.search')}
+            className="w-full bg-[#1e1e3a] border border-indigo-500/20 rounded-xl pl-12 pr-4 py-3 text-white placeholder-slate-500 input-focus"
+          />
+        </div>
+
         {/* Filter Pills */}
-        <div style={{ display: 'flex', gap: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 4, border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-2 bg-[#1e1e3a] rounded-xl p-1 border border-indigo-500/20">
           {[
             { key: 'all', label: `Tumu (${groups.length})` },
-            { key: 'active', label: `Aktif (${activeCount})`, color: '#22c55e' },
-            { key: 'inactive', label: `Bot Yok (${inactiveCount})`, color: '#ef4444' },
-            { key: 'admin', label: `Admin (${adminCount})`, color: '#6366f1' },
-            { key: 'blacklisted', label: `Kara Liste (${blacklistCount})`, color: '#f59e0b' },
+            { key: 'active', label: `Aktif (${activeCount})` },
+            { key: 'inactive', label: `Bot Yok (${inactiveCount})` },
+            { key: 'admin', label: `Admin (${adminCount})` },
+            { key: 'blacklisted', label: `Kara Liste (${blacklistCount})` },
           ].map(f => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              style={{
-                background: filter === f.key ? 'rgba(99,102,241,0.2)' : 'transparent',
-                color: filter === f.key ? '#a5b4fc' : '#64748b',
-                border: filter === f.key ? '1px solid rgba(99,102,241,0.3)' : '1px solid transparent',
-                borderRadius: 7, padding: '6px 12px', cursor: 'pointer', fontSize: 12, fontWeight: filter === f.key ? 700 : 400,
-                transition: 'all 0.15s',
-              }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                filter === f.key
+                  ? 'bg-indigo-500 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
             >
               {f.label}
             </button>
           ))}
         </div>
 
-        {/* Search */}
-        <div style={{ position: 'relative', flex: 1, maxWidth: 280 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={t('groups.search')}
-            style={{ ...input, paddingLeft: 34, width: '100%' }}
-          />
-        </div>
+        {/* Refresh */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={load}
+          className="p-3 rounded-xl bg-[#1e1e3a] border border-indigo-500/20 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/40 transition-all"
+        >
+          <RefreshCw className="w-5 h-5" />
+        </motion.button>
+      </motion.div>
 
-        <button onClick={load} style={{
-          display: 'flex', alignItems: 'center', gap: 7,
-          background: 'rgba(255,255,255,0.04)', color: '#64748b',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 9, padding: '9px 16px', cursor: 'pointer', fontSize: 12, fontWeight: 500,
-        }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-          {t('groups.refresh')}
-        </button>
-      </div>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-
-      {filtered.length === 0
-        ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#334155' }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 12px', display: 'block', opacity: 0.4 }}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            <div style={{ fontSize: 14 }}>Grup bulunamadi</div>
+      {/* Groups Grid */}
+      {filtered.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center py-20 bg-[#1e1e3a] rounded-2xl border border-indigo-500/20"
+        >
+          <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
+            <Users className="w-10 h-10 text-indigo-400" />
           </div>
-        )
-        : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {filtered.map(g => {
-              const tc = TYPE_COLOR[g.chat_type] || TYPE_COLOR.group
-              return (
-                <div key={g.id} style={{
-                  background: !g.is_active ? 'rgba(12,14,24,0.8)' : g.is_blacklisted ? 'rgba(15,18,30,0.5)' : 'linear-gradient(135deg, #101624 0%, #0d1220 100%)',
-                  borderRadius: 12, padding: '14px 18px',
-                  border: `1px solid ${!g.is_active ? 'rgba(239,68,68,0.12)' : g.is_blacklisted ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.06)'}`,
-                  borderLeft: `3px solid ${!g.is_active ? '#ef4444' : g.is_blacklisted ? '#f59e0b' : '#22c55e'}`,
-                  opacity: (!g.is_active || g.is_blacklisted) ? 0.65 : 1,
-                  display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-                  transition: 'all 0.15s',
-                }}>
-                  {/* Type badge */}
-                  <div style={{
-                    width: 38, height: 38, borderRadius: 10,
-                    background: tc.bg, border: `1px solid ${tc.color}22`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: tc.color, flexShrink: 0,
-                  }}>
+          <h3 className="text-xl font-semibold text-white mb-2">Grup bulunamadi</h3>
+          <p className="text-slate-400">Arama kriterlerinize uygun grup bulunamadi.</p>
+        </motion.div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filtered.map((g, index) => {
+            const tc = TYPE_COLOR[g.chat_type] || TYPE_COLOR.group
+            return (
+              <motion.div
+                key={g.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 * index }}
+                className={`bg-[#1e1e3a] rounded-2xl border p-5 transition-all ${
+                  !g.is_active
+                    ? 'border-rose-500/20 opacity-65'
+                    : g.is_blacklisted
+                    ? 'border-amber-500/20 opacity-65'
+                    : 'border-indigo-500/20'
+                }`}
+                style={{ borderLeft: `3px solid ${!g.is_active ? '#ef4444' : g.is_blacklisted ? '#f59e0b' : '#22c55e'}` }}
+              >
+                {/* Type badge */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`w-12 h-12 rounded-xl ${tc.bg} border ${tc.color}22 flex items-center justify-center ${tc.text}`}>
                     {g.chat_type === 'channel'
-                      ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.18 2 2 0 012.09 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.35 7.66a16 16 0 006 6l.96-.96a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                      : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                      ? <ExternalLink className="w-6 h-6" />
+                      : <Users className="w-6 h-6" />
                     }
                   </div>
+                  <span className={`text-xs px-3 py-1 rounded-full font-semibold ${tc.bg} ${tc.text}`}>
+                    {tc.label}
+                  </span>
+                </div>
 
-                  <div style={{ flex: 1, minWidth: 140 }}>
-                    <div style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 13, marginBottom: 3 }}>{g.title}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, background: tc.bg, color: tc.color, fontWeight: 600 }}>
-                        {tc.label}
+                <div className="mb-4">
+                  <h3 className="text-white font-semibold text-base mb-2">{g.title}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {/* Status badge */}
+                    {!g.is_active ? (
+                      <span className="text-xs px-2 py-1 rounded-full bg-rose-500/20 text-rose-400 font-semibold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                        Bot Yok
                       </span>
-                      {/* Durum rozeti */}
-                      {!g.is_active ? (
-                        <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, background: 'rgba(239,68,68,0.12)', color: '#f87171', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
-                          Bot Yok
-                        </span>
-                      ) : g.is_blacklisted ? (
-                        <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, background: 'rgba(245,158,11,0.12)', color: '#fbbf24', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
-                          Kara Liste
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, background: 'rgba(34,197,94,0.1)', color: '#4ade80', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
-                          Aktif
-                        </span>
-                      )}
-                      {g.member_count > 0 && (
-                        <span style={{ fontSize: 11, color: '#475569' }}>{g.member_count.toLocaleString()} uye</span>
-                      )}
-                      {g.username && (
-                        <span style={{ fontSize: 11, color: '#475569' }}>@{g.username}</span>
-                      )}
-                      {g.is_admin && (
-                        <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, background: 'rgba(99,102,241,0.1)', color: '#818cf8', fontWeight: 600 }}>
-                          Admin
-                        </span>
-                      )}
-                      {g.tag && (
-                        <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 600 }}>
-                          {g.tag}
-                        </span>
-                      )}
-                    </div>
-                    {g.chat_type === 'channel' && !g.is_admin && (
-                      <div style={{ color: '#f59e0b', fontSize: 10, marginTop: 4 }}>
-                        {t('groups.adminRequired')}
-                      </div>
+                    ) : g.is_blacklisted ? (
+                      <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 font-semibold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        Kara Liste
+                      </span>
+                    ) : (
+                      <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        Aktif
+                      </span>
+                    )}
+                    {g.is_admin && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-semibold">
+                        Admin
+                      </span>
+                    )}
+                    {g.tag && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-300 font-semibold">
+                        {g.tag}
+                      </span>
                     )}
                   </div>
+                  {g.member_count > 0 && (
+                    <p className="text-xs text-slate-500 mt-2">{g.member_count.toLocaleString()} uye</p>
+                  )}
+                  {g.username && (
+                    <p className="text-xs text-slate-500">@{g.username}</p>
+                  )}
+                  {g.chat_type === 'channel' && !g.is_admin && (
+                    <p className="text-amber-400 text-xs mt-2">
+                      {t('groups.adminRequired')}
+                    </p>
+                  )}
+                </div>
 
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <input
-                      value={editTag[g.id] !== undefined ? editTag[g.id] : (g.tag || '')}
-                      onChange={e => setEditTag({ ...editTag, [g.id]: e.target.value })}
-                      placeholder="Etiket..."
-                      style={{ ...input, width: 100, padding: '6px 10px', fontSize: 11 }}
-                    />
-                    <button onClick={() => handleTagSave(g.id)} style={{
-                      background: 'rgba(99,102,241,0.1)', color: '#818cf8',
-                      border: '1px solid rgba(99,102,241,0.2)',
-                      borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 600,
-                    }}>
-                      Kaydet
-                    </button>
-                  </div>
-
+                {/* Actions */}
+                <div className="flex items-center gap-2 pt-3 border-t border-indigo-500/10">
+                  <input
+                    value={editTag[g.id] !== undefined ? editTag[g.id] : (g.tag || '')}
+                    onChange={e => setEditTag({ ...editTag, [g.id]: e.target.value })}
+                    placeholder="Etiket..."
+                    className="flex-1 bg-[#16162a] border border-indigo-500/20 rounded-lg px-3 py-2 text-xs text-white input-focus"
+                  />
+                  <button
+                    onClick={() => handleTagSave(g.id)}
+                    className="px-3 py-2 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors text-xs font-semibold"
+                  >
+                    Kaydet
+                  </button>
                   <button
                     onClick={() => handleBlacklist(g.id, g.is_blacklisted)}
-                    style={{
-                      background: g.is_blacklisted ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                      color: g.is_blacklisted ? '#22c55e' : '#f87171',
-                      border: `1px solid ${g.is_blacklisted ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
-                      borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
-                    }}
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                      g.is_blacklisted
+                        ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                        : 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
+                    }`}
                   >
-                    {g.is_blacklisted ? 'Aktive Et' : 'Devre Disi'}
+                    {g.is_blacklisted ? 'Aktive' : 'Devre Disi'}
                   </button>
                 </div>
-              )
-            })}
-          </div>
-        )
-      }
+              </motion.div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
-}
-
-const input = {
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: 9, padding: '9px 12px',
-  color: '#f1f5f9', fontSize: 13, outline: 'none',
-  boxSizing: 'border-box',
 }
