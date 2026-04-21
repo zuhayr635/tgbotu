@@ -169,6 +169,10 @@ async def _send_message(bot: Bot, chat_id: int, broadcast: Broadcast, settings: 
             return False, "Bot gruptan atıldı veya engellendi", None
 
         except TelegramBadRequest as e:
+            err_msg = str(e).lower()
+            # Yetki hatası → yeniden denemeden döndür
+            if "not enough rights" in err_msg or "chat_write_forbidden" in err_msg or "need administrator rights" in err_msg:
+                return False, f"Yetki hatası: {str(e)}", None
             return False, f"Telegram hatası: {str(e)}", None
 
         except FileNotFoundError:
@@ -269,6 +273,16 @@ async def _run_broadcast_internal(broadcast_id: int, chat_ids: list[int]):
         else:
             failed += 1
             await _log_result(broadcast_id, chat_id, "failed", error, None, title)
+            # Yetki/erişim hatası → grubu devre dışı bırak
+            if error and ("atıldı" in error or "engellendi" in error or "Yetki hatası" in error):
+                async with AsyncSessionLocal() as session:
+                    await session.execute(
+                        update(Group)
+                        .where(Group.chat_id == chat_id)
+                        .values(is_active=False, is_admin=False)
+                    )
+                    await session.commit()
+                logger.info(f"Grup devre dışı bırakıldı (yetki hatası): {chat_id} — {title}")
 
         _active_broadcasts[broadcast_id].update({"sent": sent, "failed": failed, "skipped": skipped})
 

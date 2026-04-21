@@ -46,3 +46,10 @@ async def init_db():
             "ALTER TABLE scheduled_tasks ADD COLUMN IF NOT EXISTS "
             "broadcast_id INTEGER"
         ))
+        # Groups tablosu: yetki kolonları
+        await conn.execute(text(
+            "ALTER TABLE groups ADD COLUMN IF NOT EXISTS can_post BOOLEAN DEFAULT NULL"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE groups ADD COLUMN IF NOT EXISTS restrict_info VARCHAR(255) DEFAULT NULL"
+        ))

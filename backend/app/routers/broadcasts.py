@@ -242,7 +242,7 @@ async def broadcast_ws(broadcast_id: int, websocket: WebSocket):
                 if progress.get("status") in ("completed", "cancelled", "failed"):
                     break
             else:
-                # DB'den son durumu oku
+                # _active_broadcasts'ta yok — DB'den oku
                 async with AsyncSessionLocal() as session:
                     result = await session.execute(
                         select(Broadcast).where(Broadcast.id == broadcast_id)
@@ -256,8 +256,13 @@ async def broadcast_ws(broadcast_id: int, websocket: WebSocket):
                             "sent": b.sent_count,
                             "failed": b.failed_count,
                             "skipped": b.skipped_count,
+                            "current_title": None,
                         })
-                break
+                        # Tamamlandı/iptal/hata → kapat; pending/running → bekle
+                        if b.status not in ("pending", "running"):
+                            break
+                    else:
+                        break
             await asyncio.sleep(1)
     except WebSocketDisconnect:
         pass

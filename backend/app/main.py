@@ -15,11 +15,33 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 logger = logging.getLogger(__name__)
 
 
+async def cleanup_stale_broadcasts():
+    """Restart sonrası 'running' takılı kalan broadcast'leri 'failed' yap"""
+    from datetime import datetime
+    from sqlalchemy import update as sa_update, select as sa_select
+    from app.database import AsyncSessionLocal
+    from app.models.broadcast import Broadcast, BroadcastStatus
+
+    async with AsyncSessionLocal() as session:
+        # 'running' olanları failed yap (restart öncesi yarım kalan)
+        result = await session.execute(
+            sa_update(Broadcast)
+            .where(Broadcast.status == BroadcastStatus.running)
+            .values(status=BroadcastStatus.failed, finished_at=datetime.utcnow())
+            .returning(Broadcast.id)
+        )
+        stale_ids = [row[0] for row in result.fetchall()]
+        if stale_ids:
+            logger.warning(f"Restart sonrası {len(stale_ids)} yarım broadcast 'failed' yapıldı: {stale_ids}")
+        await session.commit()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Başlangıç
     logger.info("Uygulama başlatılıyor...")
     await init_db()
+    await cleanup_stale_broadcasts()
     start_scheduler()
     await restore_pending_tasks()
     # Broadcast kuyruğunu başlat

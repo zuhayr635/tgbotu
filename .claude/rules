@@ -1,0 +1,258 @@
+# TG Broadcast Panel — Agent Rules
+
+## Project Overview
+
+This is a **Telegram Bot Broadcast Management Panel** (tgbotu). It provides a web-based admin interface to manage a Telegram bot that sends broadcast messages to multiple groups/channels. The system consists of a Python/FastAPI backend and a React frontend, deployed via Docker Compose with PostgreSQL.
+
+**Primary Language:** Backend — Python 3.11+, Frontend — JavaScript (JSX)
+**UI Language:** Turkish (primary), English (i18n supported)
+**Code Comments & Logs:** Turkish
+
+---
+
+## Architecture
+
+### Backend (`backend/`)
+- **Framework:** FastAPI 0.111.0 with async support
+- **ORM:** SQLAlchemy 2.0+ with asyncpg (async PostgreSQL driver)
+- **Database:** PostgreSQL 15 (via Docker)
+- **Telegram Library:** aiogram 3.7.0 (async Telegram Bot API)
+- **Scheduler:** APScheduler 3.10.4 (AsyncIOScheduler)
+- **Auth:** JWT (python-jose) + bcrypt (passlib)
+- **Settings:** pydantic-settings (`.env` file support)
+- **Server:** uvicorn with standard extras
+
+#### Backend Structure
+```
+backend/app/
+├── main.py              # FastAPI app, lifespan, CORS, router registration
+├── config.py            # Pydantic Settings (env-based config)
+├── auth.py              # JWT auth, password hashing, OAuth2 scheme
+├── database.py          # Async engine, session factory, init_db with migrations
+├── bot/
+│   └── handlers.py      # aiogram router — my_chat_member handler (bot add/remove tracking)
+├── models/
+│   ├── broadcast.py     # Broadcast, BroadcastLog, BroadcastStatus, MediaType
+│   ├── group.py         # Group, ChatType
+│   ├── schedule.py      # ScheduledTask, TaskStatus, RepeatType
+│   ├── settings.py      # BotSettings (single-row config)
+│   └── template.py      # Template, MediaType
+├── routers/
+│   ├── auth.py          # /api/auth/* — login, change-password
+│   ├── broadcasts.py    # /api/broadcasts/* — CRUD, WebSocket progress, skip/cancel/retry
+│   ├── dashboard.py     # /api/dashboard/* — stats, storage cleanup
+│   ├── groups.py        # /api/groups/* — list, update, tags, add
+│   ├── schedules.py     # /api/schedules/* — CRUD, cancel
+│   ├── settings.py      # /api/settings/* — bot settings, start/stop bot
+│   └── templates.py     # /api/templates/* — CRUD, categories
+└── services/
+    ├── bot_service.py       # Bot lifecycle (start/stop polling), send_notification
+    ├── broadcast_service.py # Broadcast queue, send logic, progress tracking, skip/cancel
+    ├── scheduler_service.py # APScheduler integration, recurring tasks, restore on restart
+    └── message_utils.py     # Spintax processor, variable substitution ({grup_adi}, {tarih}, etc.)
+```
+
+### Frontend (`frontend/`)
+- **Framework:** React 18.3 with Vite 5.3
+- **Routing:** react-router-dom 6.26
+- **HTTP Client:** axios 1.7
+- **i18n:** i18next + react-i18next (TR/EN)
+- **Notifications:** react-hot-toast
+- **Dates:** date-fns 3.6
+- **Styling:** Inline styles (dark theme, no CSS framework)
+
+#### Frontend Structure
+```
+frontend/src/
+├── App.jsx              # Routes, RequireAuth wrapper
+├── main.jsx             # Entry point
+├── components/
+│   └── Layout.jsx       # Sidebar nav, language toggle, logout
+├── lib/
+│   ├── api.js           # axios instance with interceptors, all API calls
+│   └── i18n.js          # i18next config (TR default)
+├── locales/
+│   ├── tr.json          # Turkish translations
+│   └── en.json          # English translations
+└── pages/
+    ├── ActivePage.jsx       # Active broadcasts with live progress
+    ├── CalendarPage.jsx     # Calendar view of scheduled tasks
+    ├── DashboardPage.jsx    # Stats overview
+    ├── GroupsPage.jsx       # Group management
+    ├── HistoryPage.jsx      # Broadcast history
+    ├── LoginPage.jsx        # Auth login
+    ├── NewBroadcastPage.jsx # Create new broadcast
+    ├── SchedulesPage.jsx    # Schedule management
+    ├── SettingsPage.jsx     # Bot settings, start/stop
+    └── TemplatesPage.jsx    # Template management
+```
+
+### Infrastructure
+- **Docker Compose:** 3 services — `db` (PostgreSQL 15-alpine), `backend`, `frontend` (nginx)
+- **Volumes:** `postgres_data`, `uploads_data`
+- **Frontend serving:** nginx with API reverse proxy (`/api` → backend:8000)
+- **Dev proxy:** Vite dev server proxies `/api` to `localhost:8000`
+
+---
+
+## Coding Conventions
+
+### General
+- All code comments, log messages, and user-facing strings in the backend are in **Turkish**
+- API error messages returned to the frontend are in **Turkish**
+- Variable names and function names are in **English**
+- Model field names are in **English**
+- Use `async/await` throughout the backend — no synchronous DB calls
+- Use type hints in Python (e.g., `str | None`, `list[int]`, `dict[str, Any]`)
+
+### Backend Conventions
+- **Router prefix pattern:** All routers use `/api/{resource}` prefix (e.g., `/api/broadcasts`, `/api/groups`)
+- **Auth dependency:** All protected endpoints use `_: str = Depends(get_current_user)` pattern
+- **DB sessions:** Use `AsyncSessionLocal()` context manager for service-layer DB access; use `Depends(get_db)` for router-layer DB access
+- **Models:** All models inherit from `app.database.Base` (SQLAlchemy DeclarativeBase)
+- **Enums:** Use `str, enum.Enum` pattern for all enum types (e.g., `BroadcastStatus`, `MediaType`, `ChatType`)
+- **Pydantic responses:** Use `from_attributes = True` in response model Config
+- **Broadcast queue:** Single broadcast runs at a time via `asyncio.Queue`; new broadcasts are enqueued
+- **Bot lifecycle:** Single bot instance managed via module-level globals (`_bot`, `_dp`, `_polling_task`)
+- **Scheduler:** APScheduler with in-memory job store; pending tasks restored on app startup
+- **File uploads:** Stored in `UPLOAD_DIR` (`/app/uploads`), max 50MB, UUID-based filenames
+- **Media caching:** Telegram `file_id` is cached after first upload to avoid re-uploading files
+- **Spintax format:** `{option1|option2|option3}` — processed per-group for broadcast variation
+- **Variables:** `{grup_adi}`, `{grup_username}`, `{tarih}`, `{saat}`, `{gun}` — replaced per-group
+- **Database migrations:** Handled via raw SQL `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` in `init_db()` — no Alembic migrations are actively used despite being in requirements
+- **CORS:** Currently allows all origins (`allow_origins=["*"]`) — should be restricted in production
+
+### Frontend Conventions
+- **Styling:** Inline styles only — no CSS files, no CSS framework, no Tailwind
+- **Theme:** Dark theme with background `#070b18`, accent `#6366f1`/`#8b5cf6` (indigo/purple gradient)
+- **Auth:** Token stored in `localStorage` as `token`; attached via axios interceptor as `Bearer` header
+- **401 handling:** axios response interceptor removes token and redirects to `/login`
+- **API base:** All requests go to `/api` (proxied in dev by Vite, in prod by nginx)
+- **i18n:** Default language is Turkish (`tr`); language preference stored in `localStorage` as `lang`
+- **WebSocket:** Used for live broadcast progress at `/api/broadcasts/{id}/ws?token=JWT`
+- **No state management library:** Component-level state with `useState`/`useEffect`
+
+---
+
+## Key Business Logic
+
+### Broadcast Flow
+1. User creates broadcast via `POST /api/broadcasts` (multipart form with optional media)
+2. Broadcast is enqueued via `broadcast_service.run_broadcast()`
+3. Queue worker processes one broadcast at a time (`start_queue_worker`)
+4. For each target group: process spintax → process variables → send via aiogram Bot
+5. Handle rate limits (`TelegramRetryAfter`), permission errors (`TelegramForbiddenError`, `TelegramBadRequest`)
+6. Groups with permission errors are auto-deactivated (`is_active=False`)
+7. Progress tracked in-memory (`_active_broadcasts` dict) and broadcastable via WebSocket
+8. On completion: Telegram notification sent to configured `notification_chat_id`
+
+### Bot Management
+- Bot token stored in `BotSettings` table (single row, id=1)
+- Bot started/stopped via API endpoints (`/api/settings/bot/start`, `/api/settings/bot/stop`)
+- Bot uses long polling (not webhooks) with `my_chat_member` update tracking
+- When bot is added to/removed from groups, `Group` records are auto-upserted
+
+### Scheduled Tasks
+- Tasks scheduled via APScheduler `date` trigger
+- Recurring tasks: on completion, a new `ScheduledTask` is created with next run date
+- Repeat types: `none`, `daily`, `weekly`, `monthly`
+- On app restart, pending tasks are restored from DB
+
+---
+
+## Security Considerations
+
+- **JWT secret** must be at least 32 characters — change default in production
+- **Admin credentials** must be changed from defaults (`admin`/`admin123`)
+- **CORS** should be restricted to the frontend domain in production
+- **WebSocket auth** validates JWT from query parameter
+- **File uploads** limited to 50MB; only image/video extensions allowed
+- **No rate limiting** on API endpoints currently
+- **Bot token** stored in DB, not env — accessible via settings API (protected by auth)
+
+---
+
+## Development Commands
+
+### Local Development
+```bash
+# Backend
+cd backend && pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+
+# Frontend
+cd frontend && npm install && npm run dev
+
+# Docker (full stack)
+docker-compose up --build
+```
+
+### Build
+```bash
+# Frontend production build
+cd frontend && npm run build
+
+# Docker production
+docker-compose -f docker-compose.yml up --build -d
+```
+
+---
+
+## File Modification Rules
+
+### When adding new API endpoints:
+1. Create route in `backend/app/routers/` with `/api/{resource}` prefix
+2. Register router in `backend/app/main.py`
+3. Add corresponding API function in `frontend/src/lib/api.js`
+4. Add i18n keys in both `frontend/src/locales/tr.json` and `frontend/src/locales/en.json`
+
+### When adding new database models:
+1. Create model in `backend/app/models/` inheriting from `Base`
+2. Import model in `backend/app/database.py` `init_db()` function
+3. Add migration SQL in `init_db()` for new columns (use `IF NOT EXISTS` pattern)
+4. Do NOT use Alembic for migrations — project uses manual SQL migrations in `init_db()`
+
+### When modifying broadcast logic:
+1. Changes go in `backend/app/services/broadcast_service.py`
+2. Respect the queue pattern — only one broadcast runs at a time
+3. Always handle `TelegramRetryAfter`, `TelegramForbiddenError`, `TelegramBadRequest` exceptions
+4. Update `_active_broadcasts` dict for progress tracking
+5. Log all significant events with Turkish messages
+
+### When modifying frontend pages:
+1. Use inline styles matching the dark theme (`#070b18` background, indigo/purple accents)
+2. Use `useTranslation()` hook for all user-facing text
+3. Use `api.js` functions for all HTTP requests — never call axios directly
+4. Handle loading/error states in components
+5. Use `react-hot-toast` for user notifications
+
+### When working with the Telegram Bot:
+1. Always use `get_bot()` from `bot_service` — never instantiate Bot directly
+2. Bot uses HTML parse mode by default
+3. Fresh router must be created on each bot start (see `create_router()`)
+4. Bot polling runs as an `asyncio.Task` — be careful with cancellation
+5. `send_notification()` silently fails if bot is not running
+
+---
+
+## Testing Notes
+
+- No test framework is currently configured
+- When adding tests, prefer `pytest` with `pytest-asyncio` for backend
+- Use `httpx.AsyncClient` with `ASGITransport` for FastAPI endpoint testing
+- Mock aiogram Bot in tests — never call real Telegram API in tests
+
+---
+
+## Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `POSTGRES_USER` | `tgbot` | PostgreSQL username |
+| `POSTGRES_PASSWORD` | `tgbot_secret` | PostgreSQL password |
+| `POSTGRES_DB` | `tgbot` | PostgreSQL database name |
+| `SECRET_KEY` | `changeme_super_secret_key_32chars` | JWT signing key (min 32 chars) |
+| `ADMIN_USERNAME` | `admin` | Panel login username |
+| `ADMIN_PASSWORD` | `admin123` | Panel login password |
+| `UPLOAD_DIR` | `/app/uploads` | File upload directory |
+| `DOMAIN` | — | Deployment domain |

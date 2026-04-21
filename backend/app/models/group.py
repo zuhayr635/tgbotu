@@ -22,6 +22,8 @@ class Group(Base):
     is_active = Column(Boolean, default=True)          # Bot hâlâ içinde mi
     is_blacklisted = Column(Boolean, default=False)    # Kullanıcı devre dışı bıraktı mı
     is_admin = Column(Boolean, default=False)           # Bot admin mi (kanal için gerekli)
+    can_post = Column(Boolean, default=None, nullable=True)  # Mesaj gönderme yetkisi var mı (None=kontrol edilmedi)
+    restrict_info = Column(String(255), nullable=True)  # Kısıtlama sebebi
     tag = Column(String(100), nullable=True)            # Kullanıcının verdiği etiket
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
