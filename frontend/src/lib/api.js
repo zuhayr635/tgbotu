@@ -40,6 +40,7 @@ export const cleanupStorage = () => api.delete('/dashboard/storage/cleanup')
 export const getGroups = (activeOnly = true) => api.get(`/groups?active_only=${activeOnly}`)
 export const updateGroup = (id, data) => api.patch(`/groups/${id}`, data)
 export const getTags = () => api.get('/groups/tags')
+export const addGroup = (chatId) => api.post('/groups/add', { chat_id: String(chatId) })
 
 // Broadcasts
 export const createBroadcast = (formData) => api.post('/broadcasts', formData)

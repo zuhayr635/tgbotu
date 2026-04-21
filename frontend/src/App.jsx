@@ -8,6 +8,7 @@ import HistoryPage from './pages/HistoryPage'
 import SettingsPage from './pages/SettingsPage'
 import TemplatesPage from './pages/TemplatesPage'
 import CalendarPage from './pages/CalendarPage'
+import ActivePage from './pages/ActivePage'
 import Layout from './components/Layout'
 
 function RequireAuth({ children }) {
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="templates" element={<TemplatesPage />} />
           <Route path="calendar" element={<CalendarPage />} />
+          <Route path="active" element={<ActivePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

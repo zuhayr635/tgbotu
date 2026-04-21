@@ -10,6 +10,7 @@ const ICONS = {
   templates: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
   history: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>,
   settings: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
+  active: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
 }
 
 export default function Layout() {
@@ -19,6 +20,7 @@ export default function Layout() {
   const navItems = [
     { to: '/dashboard', label: t('nav.dashboard'), icon: ICONS.dashboard },
     { to: '/broadcast/new', label: t('nav.newBroadcast'), icon: ICONS.broadcast },
+    { to: '/active', label: 'Aktif Yayinlar', icon: ICONS.active, accent: true },
     { to: '/groups', label: t('nav.groups'), icon: ICONS.groups },
     { to: '/schedules', label: t('nav.schedules'), icon: ICONS.schedules },
     { to: '/calendar', label: 'Takvim', icon: ICONS.calendar },
@@ -75,6 +77,7 @@ export default function Layout() {
 
         {/* Nav */}
         <div style={{ flex: 1, padding: '10px 10px' }}>
+          <style>{`@keyframes navpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
           {navItems.map(item => (
             <NavLink
               key={item.to}
@@ -97,7 +100,10 @@ export default function Layout() {
               })}
             >
               <span style={{ opacity: 1, flexShrink: 0 }}>{item.icon}</span>
-              <span>{item.label}</span>
+              <span style={{ flex: 1 }}>{item.label}</span>
+              {item.accent && (
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 5px #22c55e', animation: 'navpulse 1.8s infinite', flexShrink: 0 }} />
+              )}
             </NavLink>
           ))}
         </div>

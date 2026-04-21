@@ -36,7 +36,20 @@ async def start_queue_worker():
         try:
             await _run_broadcast_internal(broadcast_id, chat_ids)
         except Exception as e:
-            logger.error(f"Kuyruk hatası broadcast {broadcast_id}: {e}")
+            logger.error(f"Kuyruk hatası broadcast {broadcast_id}: {e}", exc_info=True)
+            # Broadcast stuck kalmadan "failed" durumuna al
+            if broadcast_id in _active_broadcasts:
+                _active_broadcasts[broadcast_id]["status"] = "failed"
+            try:
+                async with AsyncSessionLocal() as session:
+                    await session.execute(
+                        update(Broadcast)
+                        .where(Broadcast.id == broadcast_id)
+                        .values(status=BroadcastStatus.failed, finished_at=datetime.utcnow())
+                    )
+                    await session.commit()
+            except Exception:
+                pass
         finally:
             _broadcast_queue.task_done()
 
