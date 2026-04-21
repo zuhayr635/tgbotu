@@ -21,6 +21,28 @@ async def get_db():
 
 
 async def init_db():
+    from sqlalchemy import text
     async with engine.begin() as conn:
         from app.models import group, broadcast, schedule, settings as settings_model, template  # noqa
         await conn.run_sync(Base.metadata.create_all)
+
+        # Migration: yeni kolonlari ekle (varsa atla)
+        await conn.execute(text("""
+            DO $$ BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'repeattype') THEN
+                    CREATE TYPE repeattype AS ENUM ('none', 'daily', 'weekly', 'monthly');
+                END IF;
+            END $$;
+        """))
+        await conn.execute(text(
+            "ALTER TABLE scheduled_tasks ADD COLUMN IF NOT EXISTS "
+            "repeat_type repeattype DEFAULT 'none'"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE scheduled_tasks ADD COLUMN IF NOT EXISTS "
+            "repeat_end_at TIMESTAMP WITH TIME ZONE"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE scheduled_tasks ADD COLUMN IF NOT EXISTS "
+            "broadcast_id INTEGER"
+        ))
