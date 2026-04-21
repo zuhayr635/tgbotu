@@ -71,11 +71,14 @@ export default function SettingsPage() {
     }
   }
 
-  if (!s) return <div style={{ color: '#64748b' }}>{t('common.loading')}</div>
+  if (!s) return <div style={{ color: '#475569', padding: 40 }}>Yukleniyor...</div>
 
   return (
-    <div style={{ maxWidth: 600 }}>
-      <h1 style={pageTitle}>{t('settings.title')}</h1>
+    <div style={{ maxWidth: 620 }}>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={pageTitle}>{t('settings.title')}</h1>
+        <p style={{ color: '#475569', fontSize: 13, margin: 0 }}>Bot, bildirim ve sistem ayarlari</p>
+      </div>
 
       <div style={card}>
         <h2 style={cardTitle}>Bot</h2>
@@ -95,10 +98,11 @@ export default function SettingsPage() {
         {s.bot_username && <div style={{ color: '#64748b', fontSize: 13, marginBottom: 12 }}>@{s.bot_username}</div>}
 
         <button onClick={handleBotToggle} style={{
-          background: s.bot_is_running ? '#3d1a1a' : '#1a3d1a',
+          background: s.bot_is_running ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)',
           color: s.bot_is_running ? '#f87171' : '#4ade80',
-          border: `1px solid ${s.bot_is_running ? '#f87171' : '#4ade80'}`,
-          borderRadius: 8, padding: '8px 18px', cursor: 'pointer', fontSize: 13, fontWeight: 600
+          border: `1px solid ${s.bot_is_running ? 'rgba(239,68,68,0.25)' : 'rgba(34,197,94,0.25)'}`,
+          borderRadius: 9, padding: '9px 20px', cursor: 'pointer', fontSize: 13, fontWeight: 700,
+          display: 'flex', alignItems: 'center', gap: 8,
         }}>
           {s.bot_is_running ? t('settings.stopBot') : t('settings.startBot')}
         </button>
@@ -138,7 +142,7 @@ export default function SettingsPage() {
         <div style={{ display: 'flex', gap: 8 }}>
           {['tr', 'en'].map(lang => (
             <button key={lang} onClick={() => { i18n.changeLanguage(lang); localStorage.setItem('lang', lang) }}
-              style={{ background: i18n.language === lang ? '#5b6ef5' : '#2d3150', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 20px', cursor: 'pointer', fontWeight: i18n.language === lang ? 700 : 400 }}>
+              style={{ background: i18n.language === lang ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)', color: i18n.language === lang ? '#a5b4fc' : '#64748b', border: i18n.language === lang ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.08)', borderRadius: 9, padding: '8px 22px', cursor: 'pointer', fontWeight: i18n.language === lang ? 700 : 400, fontSize: 13 }}>
               {lang === 'tr' ? 'Turkce' : 'English'}
             </button>
           ))}
@@ -154,16 +158,16 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <button onClick={handleSave} style={{ background: '#5b6ef5', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>
+      <button onClick={handleSave} style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 32px', fontSize: 14, fontWeight: 700, cursor: 'pointer', marginTop: 4, boxShadow: '0 4px 14px rgba(99,102,241,0.35)' }}>
         {t('settings.save')}
       </button>
     </div>
   )
 }
 
-const pageTitle = { color: '#e2e8f0', fontSize: 22, fontWeight: 700, marginBottom: 24, marginTop: 0 }
-const card = { background: '#1a1d2e', borderRadius: 12, padding: 20, border: '1px solid #2d3150', marginBottom: 16 }
-const cardTitle = { color: '#e2e8f0', fontSize: 15, fontWeight: 600, margin: '0 0 14px' }
-const labelStyle = { display: 'block', color: '#94a3b8', fontSize: 13, marginBottom: 6 }
-const inputStyle = { background: '#0f1117', border: '1px solid #2d3150', borderRadius: 8, padding: '10px 12px', color: '#e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }
-const secBtn = { background: '#2d3150', color: '#e2e8f0', border: 'none', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontSize: 13 }
+const pageTitle = { color: '#f1f5f9', fontSize: 26, fontWeight: 700, marginBottom: 8, marginTop: 0, letterSpacing: '-0.5px' }
+const card = { background: 'linear-gradient(135deg, #101624 0%, #0d1220 100%)', borderRadius: 14, padding: 20, border: '1px solid rgba(255,255,255,0.06)', marginBottom: 16 }
+const cardTitle = { color: '#94a3b8', fontSize: 11, fontWeight: 700, margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.8px' }
+const labelStyle = { display: 'block', color: '#64748b', fontSize: 12, marginBottom: 6, fontWeight: 500 }
+const inputStyle = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 9, padding: '10px 12px', color: '#f1f5f9', fontSize: 13, outline: 'none', boxSizing: 'border-box' }
+const secBtn = { background: 'rgba(255,255,255,0.04)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 9, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 500 }

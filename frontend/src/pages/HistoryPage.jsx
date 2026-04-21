@@ -4,8 +4,19 @@ import { listBroadcasts, getBroadcastLogs, retryFailed } from '../lib/api'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 
-const statusColor = { completed: '#22c55e', running: '#5b6ef5', failed: '#ef4444', pending: '#f59e0b', cancelled: '#64748b' }
-const logColor = { sent: '#22c55e', failed: '#ef4444', skipped: '#94a3b8' }
+const STATUS = {
+  completed: { color: '#22c55e', bg: 'rgba(34,197,94,0.1)',  label: 'Tamamlandi' },
+  running:   { color: '#6366f1', bg: 'rgba(99,102,241,0.1)', label: 'Calisiyor' },
+  failed:    { color: '#ef4444', bg: 'rgba(239,68,68,0.1)',  label: 'Basarisiz' },
+  pending:   { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', label: 'Bekliyor' },
+  cancelled: { color: '#475569', bg: 'rgba(71,85,105,0.1)',  label: 'Iptal' },
+}
+
+const LOG_STATUS = {
+  sent:    { color: '#22c55e', label: 'GONDERILDI' },
+  failed:  { color: '#ef4444', label: 'HATA' },
+  skipped: { color: '#475569', label: 'ATLANDI' },
+}
 
 export default function HistoryPage() {
   const { t } = useTranslation()
@@ -37,60 +48,123 @@ export default function HistoryPage() {
 
   return (
     <div>
-      <h1 style={pageTitle}>{t('history.title')}</h1>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', margin: 0, letterSpacing: '-0.5px' }}>
+          {t('history.title')}
+        </h1>
+        <p style={{ color: '#475569', fontSize: 13, margin: '4px 0 0' }}>
+          Tum yayin gecmisi ve detayli loglar
+        </p>
+      </div>
 
       {broadcasts.length === 0
-        ? <p style={{ color: '#64748b' }}>Henuz yayin yok</p>
+        ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#334155' }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 12px', display: 'block', opacity: 0.4 }}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <div style={{ fontSize: 14 }}>Henuz yayin yok</div>
+          </div>
+        )
         : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {broadcasts.map(b => (
-              <div key={b.id} style={{ background: '#1a1d2e', borderRadius: 12, border: '1px solid #2d3150', overflow: 'hidden' }}>
-                <div
-                  style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
-                  onClick={() => toggleExpand(b.id)}
-                >
-                  <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: statusColor[b.status] + '22', color: statusColor[b.status], fontWeight: 600, whiteSpace: 'nowrap' }}>
-                    {t(`history.status.${b.status}`) || b.status}
-                  </span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: '#e2e8f0', fontSize: 13 }}>
-                      {b.message_text ? b.message_text.slice(0, 80) : `(${b.media_type})`}
-                    </div>
-                    <div style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>
-                      {b.created_at ? format(new Date(b.created_at), 'dd.MM.yyyy HH:mm') : ''} — Gonderildi: {b.sent_count} / Basarisiz: {b.failed_count} / Toplam: {b.total_groups}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {b.failed_count > 0 && (
-                      <button onClick={e => { e.stopPropagation(); handleRetry(b.id) }} style={{ background: '#2d3150', color: '#f59e0b', border: 'none', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontSize: 12 }}>
-                        {t('history.retryFailed')}
-                      </button>
-                    )}
-                    <span style={{ color: '#64748b', fontSize: 14 }}>{expanded === b.id ? 'v' : '>'}</span>
-                  </div>
-                </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {broadcasts.map(b => {
+              const s = STATUS[b.status] || STATUS.completed
+              const isOpen = expanded === b.id
+              const total = b.total_groups || 1
+              const sentPct = Math.round((b.sent_count / total) * 100)
+              const failPct = Math.round((b.failed_count / total) * 100)
 
-                {expanded === b.id && (
-                  <div style={{ borderTop: '1px solid #2d3150', padding: '0 20px 12px', maxHeight: 300, overflowY: 'auto' }}>
-                    {(logs[b.id] || []).map(log => (
-                      <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: '1px solid #1a1d2e', fontSize: 13 }}>
-                        <span style={{ color: logColor[log.status], fontWeight: 700, minWidth: 60 }}>
-                          {log.status === 'sent' ? 'OK' : log.status === 'failed' ? 'HATA' : 'ATLANDI'}
-                        </span>
-                        <span style={{ flex: 1, color: '#e2e8f0' }}>{log.chat_title || log.chat_id}</span>
-                        {log.error_message && <span style={{ color: '#ef4444', fontSize: 11 }}>{log.error_message}</span>}
-                        <span style={{ color: '#64748b', fontSize: 11 }}>{log.sent_at ? format(new Date(log.sent_at), 'HH:mm:ss') : ''}</span>
+              return (
+                <div key={b.id} style={{
+                  background: 'linear-gradient(135deg, #101624 0%, #0d1220 100%)',
+                  borderRadius: 14,
+                  border: `1px solid ${isOpen ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                  overflow: 'hidden',
+                  transition: 'border-color 0.15s',
+                }}>
+                  <div
+                    style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+                    onClick={() => toggleExpand(b.id)}
+                  >
+                    <span style={{
+                      fontSize: 10, padding: '4px 10px', borderRadius: 20, flexShrink: 0,
+                      background: s.bg, color: s.color, fontWeight: 700,
+                      textTransform: 'uppercase', letterSpacing: '0.4px',
+                    }}>
+                      {s.label}
+                    </span>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ color: '#cbd5e1', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>
+                        {b.message_text ? b.message_text.slice(0, 80) : `(${b.media_type})`}
                       </div>
-                    ))}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: '#475569' }}>
+                        <span>{b.created_at ? format(new Date(b.created_at), 'dd.MM.yyyy HH:mm') : ''}</span>
+                        <span style={{ color: '#22c55e' }}>{b.sent_count} OK</span>
+                        {b.failed_count > 0 && <span style={{ color: '#ef4444' }}>{b.failed_count} HATA</span>}
+                        <span>/ {b.total_groups} toplam</span>
+                      </div>
+                    </div>
+
+                    {/* Mini progress */}
+                    <div style={{ width: 60, flexShrink: 0 }}>
+                      <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${sentPct}%`, background: '#22c55e', borderRadius: 4 }} />
+                      </div>
+                      <div style={{ fontSize: 10, color: '#475569', textAlign: 'center', marginTop: 3 }}>{sentPct}%</div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      {b.failed_count > 0 && (
+                        <button onClick={e => { e.stopPropagation(); handleRetry(b.id) }} style={{
+                          background: 'rgba(245,158,11,0.1)', color: '#f59e0b',
+                          border: '1px solid rgba(245,158,11,0.2)',
+                          borderRadius: 8, padding: '5px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                        }}>
+                          Tekrar Dene
+                        </button>
+                      )}
+                      <div style={{ color: '#334155', transition: 'transform 0.2s', transform: isOpen ? 'rotate(90deg)' : 'none' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {isOpen && (
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', maxHeight: 320, overflowY: 'auto' }}>
+                      {(logs[b.id] || []).map(log => {
+                        const ls = LOG_STATUS[log.status] || LOG_STATUS.skipped
+                        return (
+                          <div key={log.id} style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '9px 20px',
+                            borderBottom: '1px solid rgba(255,255,255,0.03)',
+                            fontSize: 12,
+                          }}>
+                            <span style={{ color: ls.color, fontWeight: 700, fontSize: 10, minWidth: 72, letterSpacing: '0.4px' }}>
+                              {ls.label}
+                            </span>
+                            <span style={{ flex: 1, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {log.chat_title || log.chat_id}
+                            </span>
+                            {log.error_message && (
+                              <span style={{ color: '#ef4444', fontSize: 10, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {log.error_message}
+                              </span>
+                            )}
+                            <span style={{ color: '#334155', fontSize: 10, flexShrink: 0 }}>
+                              {log.sent_at ? format(new Date(log.sent_at), 'HH:mm:ss') : ''}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )
       }
     </div>
   )
 }
-
-const pageTitle = { color: '#e2e8f0', fontSize: 22, fontWeight: 700, marginBottom: 24, marginTop: 0 }
