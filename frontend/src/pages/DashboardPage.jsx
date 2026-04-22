@@ -51,20 +51,21 @@ export default function DashboardPage() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Title */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
       >
         <div>
-          <h1 className="text-2xl font-bold text-white">{t('dashboard.title')}</h1>
-          <p className="text-slate-400">Sistem genel bakışı ve istatistikler</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">{t('dashboard.title')}</h1>
+          <p className="text-slate-400 text-sm sm:text-base">Sistem genel bakışı ve istatistikler</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-slate-400">
-          <Clock className="w-4 h-4" />
-          <span>Son güncelleme: {new Date().toLocaleTimeString('tr-TR')}</span>
+        <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-400">
+          <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span className="hidden sm:inline">Son güncelleme: </span>
+          <span>{new Date().toLocaleTimeString('tr-TR')}</span>
         </div>
       </motion.div>
 
@@ -73,13 +74,13 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-center justify-between"
+          className="bg-amber-500/10 border border-amber-500/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-amber-400" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
             </div>
-            <span className="text-amber-300 text-sm">
+            <span className="text-amber-300 text-xs sm:text-sm">
               {t('dashboard.storageWarning', { mb: data.storage_mb })}
             </span>
           </div>
@@ -90,7 +91,7 @@ export default function DashboardPage() {
               toast.success('Depolama temizlendi')
               load()
             }}
-            className="px-4 py-2 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors text-sm font-medium"
+            className="px-3 sm:px-4 py-2 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors text-xs sm:text-sm font-medium"
           >
             {t('dashboard.cleanupStorage')}
           </button>
@@ -102,23 +103,23 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6"
         >
-          <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
+          <div className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                <CreditCard className="w-5 h-5 text-purple-400" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
               </div>
               <div>
-                <div className="text-slate-400 text-sm">Mevcut Plan</div>
-                <div className="text-white font-semibold">
+                <div className="text-slate-400 text-xs sm:text-sm">Mevcut Plan</div>
+                <div className="text-white font-semibold text-sm sm:text-base">
                   {planInfo?.plan_type === 'free' ? 'Ücretsiz' :
                    planInfo?.plan_type === 'weekly' ? 'Haftalık' :
                    planInfo?.plan_type === 'monthly' ? 'Aylık' : 'Ücretsiz'}
                 </div>
               </div>
             </div>
-            <div className="flex gap-4 text-sm">
+            <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm">
               <div>
                 <span className="text-slate-500">Max Bot:</span>
                 <span className="text-white ml-1">{planInfo?.max_bots || 1}</span>
@@ -130,29 +131,29 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
+          <div className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                <Zap className="w-5 h-5 text-amber-400" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
               </div>
               <div>
-                <div className="text-slate-400 text-sm">Token Bakiyesi</div>
-                <div className="text-white font-semibold">{tokenInfo?.current_balance || 0}</div>
+                <div className="text-slate-400 text-xs sm:text-sm">Token Bakiyesi</div>
+                <div className="text-white font-semibold text-sm sm:text-base">{tokenInfo?.current_balance || 0}</div>
               </div>
             </div>
-            <div className="text-sm text-slate-400">
+            <div className="text-xs sm:text-sm text-slate-400">
               Bu Dönem: {tokenInfo?.tokens_used_period || 0} / {tokenInfo?.tokens_per_period || 100}
             </div>
           </div>
 
-          <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
+          <div className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
               </div>
               <div>
-                <div className="text-slate-400 text-sm">Kota Kullanımı</div>
-                <div className="text-white font-semibold">
+                <div className="text-slate-400 text-xs sm:text-sm">Kota Kullanımı</div>
+                <div className="text-white font-semibold text-sm sm:text-base">
                   {tokenInfo?.tokens_per_period
                     ? Math.round((tokenInfo.tokens_used_period / tokenInfo.tokens_per_period) * 100)
                     : 0}%
@@ -177,7 +178,7 @@ export default function DashboardPage() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <StatCard
           title={t('dashboard.totalGroups')}
           value={data.total_groups}
@@ -209,35 +210,35 @@ export default function DashboardPage() {
       </div>
 
       {/* Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {/* Recent Broadcasts */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6"
+          className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 p-4 sm:p-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-indigo-400" />
+            <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
               {t('dashboard.recentBroadcasts')}
             </h3>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="text-sm text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1"
+              className="text-xs sm:text-sm text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1"
             >
-              Tümünü Gör
-              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Tümünü Gör</span>
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </motion.button>
           </div>
           {data.recent_broadcasts.length === 0
-            ? <p className="text-slate-400 text-sm">{t('dashboard.noRecent')}</p>
+            ? <p className="text-slate-400 text-xs sm:text-sm">{t('dashboard.noRecent')}</p>
             : data.recent_broadcasts.map(b => (
-              <div key={b.id} className="p-3 rounded-xl bg-[#16162a]/50 border border-indigo-500/10 mb-2 last:mb-0">
-                <div className="flex items-center justify-between">
+              <div key={b.id} className="p-2.5 sm:p-3 rounded-xl bg-[#16162a]/50 border border-indigo-500/10 mb-2 last:mb-0">
+                <div className="flex items-start sm:items-center justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-slate-200 truncate mb-1">
+                    <div className="text-xs sm:text-sm text-slate-200 truncate mb-1">
                       {b.message_preview || '(medya)'}
                     </div>
                     <div className="text-xs text-slate-500">
@@ -245,7 +246,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <span
-                    className="text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider ml-3"
+                    className="text-xs px-2 sm:px-3 py-1 rounded-full font-semibold uppercase tracking-wider flex-shrink-0"
                     style={{ background: statusBg[b.status], color: statusColor[b.status] }}
                   >
                     {b.status}
@@ -261,22 +262,22 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6"
+          className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 p-4 sm:p-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Clock className="w-5 h-5 text-amber-400" />
+            <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
               {t('dashboard.upcomingTasks')}
             </h3>
           </div>
           {data.upcoming_tasks.length === 0
-            ? <p className="text-slate-400 text-sm">{t('dashboard.noUpcoming')}</p>
+            ? <p className="text-slate-400 text-xs sm:text-sm">{t('dashboard.noUpcoming')}</p>
             : data.upcoming_tasks.map(task => (
-              <div key={task.id} className="p-3 rounded-xl bg-[#16162a]/50 border border-indigo-500/10 mb-2 last:mb-0">
-                <div className="text-sm text-slate-200 truncate mb-1">
+              <div key={task.id} className="p-2.5 sm:p-3 rounded-xl bg-[#16162a]/50 border border-indigo-500/10 mb-2 last:mb-0">
+                <div className="text-xs sm:text-sm text-slate-200 truncate mb-1">
                   {task.message_preview || '(medya)'}
                 </div>
-                <div className="flex items-center gap-3 text-xs text-slate-500">
+                <div className="flex items-center gap-2 sm:gap-3 text-xs text-slate-500">
                   <div className="flex items-center gap-1">
                     <Users className="w-3 h-3" />
                     {task.target_count} grup

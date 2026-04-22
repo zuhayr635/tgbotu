@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { getGroups, updateGroup, addGroup, detectUserGroups, promoteBotInGroup, promoteBotBulk, checkGroupPermissions } from '../lib/api'
 import toast from 'react-hot-toast'
-import { Users, Plus, Search, RefreshCw, Globe, Lock, Edit2, Trash2, ExternalLink, Shield, CheckCircle, XCircle, AlertCircle, Crown, Check, X } from 'lucide-react'
+import { Users, Plus, Search, RefreshCw, ExternalLink, Shield, CheckCircle, XCircle, AlertCircle, Crown, Check } from 'lucide-react'
 
 const TYPE_COLOR = {
   group: { color: '#6366f1', bg: 'bg-indigo-500/20', text: 'text-indigo-400', label: 'Grup' },
@@ -158,42 +158,43 @@ export default function GroupsPage() {
   const inactiveCount = groups.filter(g => !g.is_active).length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+        className="flex flex-col gap-3 sm:gap-4"
       >
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-              <Users className="w-5 h-5 text-white" />
+          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             {t('groups.title')}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-slate-400 mt-1 text-sm sm:text-base">
             {groups.length} kayitli · <span className="text-emerald-400">{activeCount} aktif</span> · <span className="text-rose-400">{inactiveCount} bot yok</span> · {adminCount} admin
-            {selectedGroups.size > 0 && <span className="text-indigo-400 ml-2">· {selectedGroups.size} seçili</span>}
+            {selectedGroups.size > 0 && <span className="text-indigo-400 ml-1 sm:ml-2">· {selectedGroups.size} seçili</span>}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleDetectGroups}
             disabled={detecting}
-            className="flex items-center gap-2 px-4 py-3 rounded-xl font-medium bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-xl font-medium bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-50 text-xs sm:text-sm"
           >
             {detecting ? (
               <>
-                <div className="w-4 h-4 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
                 Tespit Ediliyor...
               </>
             ) : (
               <>
-                <Shield className="w-5 h-5" />
-                Grupları Tespit Et
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Grupları Tespit Et</span>
+                <span className="sm:hidden">Tespit Et</span>
               </>
             )}
           </motion.button>
@@ -202,17 +203,18 @@ export default function GroupsPage() {
             whileTap={{ scale: 0.98 }}
             onClick={handleCheckPermissions}
             disabled={checking}
-            className="flex items-center gap-2 px-4 py-3 rounded-xl font-medium bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-xl font-medium bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all disabled:opacity-50 text-xs sm:text-sm"
           >
             {checking ? (
               <>
-                <div className="w-4 h-4 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
                 Kontrol Ediliyor...
               </>
             ) : (
               <>
-                <CheckCircle className="w-5 h-5" />
-                Yetkileri Kontrol Et
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Yetkileri Kontrol Et</span>
+                <span className="sm:hidden">Yetkiler</span>
               </>
             )}
           </motion.button>
@@ -220,15 +222,15 @@ export default function GroupsPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowAdd(!showAdd)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium shadow-lg ${
+            className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg ${
               showAdd
                 ? 'bg-rose-500/20 text-rose-400 shadow-rose-500/30'
                 : 'btn-gradient text-white shadow-indigo-500/30'
-            }`}
+            } text-xs sm:text-sm`}
           >
             {showAdd
-              ? <><ExternalLink className="w-5 h-5" /> Iptal</>
-              : <><Plus className="w-5 h-5" /> Grup Ekle</>
+              ? <><ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" /> Iptal</>
+              : <><Plus className="w-4 h-4 sm:w-5 sm:h-5" /> Grup Ekle</>
             }
           </motion.button>
         </div>
@@ -239,30 +241,30 @@ export default function GroupsPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/30 p-6"
+          className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/30 p-4 sm:p-6"
         >
           <div className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3">
             Grup / Kanal Ekle
           </div>
-          <p className="text-slate-500 text-sm mb-4">
+          <p className="text-slate-500 text-xs sm:text-sm mb-4">
             Botun üye oldugu bir grubun ID'sini veya @kullaniciadi'ni girin. Bot o grupta olmak zorunda.
           </p>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               value={addInput}
               onChange={e => setAddInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAdd()}
               placeholder="-100123456789 veya @grupadi"
-              className="flex-1 bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white placeholder-slate-500 input-focus"
+              className="flex-1 bg-[#16162a] border border-indigo-500/20 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white placeholder-slate-500 input-focus text-sm"
             />
             <button
               onClick={handleAdd}
               disabled={adding}
-              className="px-6 py-3 rounded-xl btn-gradient text-white font-medium flex items-center gap-2 disabled:opacity-50"
+              className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl btn-gradient text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
             >
               {adding ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Ekleniyor...
                 </>
               ) : 'Ekle'}
@@ -280,52 +282,65 @@ export default function GroupsPage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex flex-col lg:flex-row gap-4"
+        className="flex flex-col gap-3"
       >
         {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        <div className="relative">
+          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={t('groups.search')}
-            className="w-full bg-[#1e1e3a] border border-indigo-500/20 rounded-xl pl-12 pr-4 py-3 text-white placeholder-slate-500 input-focus"
+            className="w-full bg-[#1e1e3a] border border-indigo-500/20 rounded-xl pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 text-white placeholder-slate-500 input-focus text-sm"
           />
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-2 bg-[#1e1e3a] rounded-xl p-1 border border-indigo-500/20">
-          {[
-            { key: 'all', label: `Tumu (${groups.length})` },
-            { key: 'active', label: `Aktif (${activeCount})` },
-            { key: 'inactive', label: `Bot Yok (${inactiveCount})` },
-            { key: 'admin', label: `Admin (${adminCount})` },
-            { key: 'blacklisted', label: `Kara Liste (${blacklistCount})` },
-          ].map(f => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                filter === f.key
-                  ? 'bg-indigo-500 text-white'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        {/* Filter Pills & Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1 sm:gap-2 bg-[#1e1e3a] rounded-xl p-1 border border-indigo-500/20 overflow-x-auto">
+            {[
+              { key: 'all', label: `Tumu (${groups.length})` },
+              { key: 'active', label: `Aktif (${activeCount})` },
+              { key: 'inactive', label: `Bot Yok (${inactiveCount})` },
+              { key: 'admin', label: `Admin (${adminCount})` },
+              { key: 'blacklisted', label: `Kara Liste (${blacklistCount})` },
+            ].map(f => (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                  filter === f.key
+                    ? 'bg-indigo-500 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
 
-        {/* Refresh */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={load}
-          className="p-3 rounded-xl bg-[#1e1e3a] border border-indigo-500/20 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/40 transition-all"
-        >
-          <RefreshCw className="w-5 h-5" />
-        </motion.button>
+          {/* Refresh & Select All */}
+          <div className="flex items-center gap-2">
+            {selectedGroups.size > 0 && (
+              <button
+                onClick={toggleSelectAll}
+                className="px-3 py-2 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors text-xs font-semibold"
+              >
+                {selectedGroups.size === filtered.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}
+              </button>
+            )}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={load}
+              className="p-2 sm:p-3 rounded-xl bg-[#1e1e3a] border border-indigo-500/20 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/40 transition-all"
+            >
+              <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5" />
+            </motion.button>
+          </div>
+        </div>
       </motion.div>
 
       {/* Bulk Actions Bar */}
@@ -333,28 +348,28 @@ export default function GroupsPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl border border-indigo-500/30 p-4 flex items-center justify-between"
+          className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl sm:rounded-2xl border border-indigo-500/30 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold text-sm sm:text-base">
               {selectedGroups.size}
             </div>
             <div>
-              <p className="text-white font-semibold">{selectedGroups.size} grup seçildi</p>
-              <p className="text-slate-400 text-sm">Toplu işlemler için bir aksiyon seçin</p>
+              <p className="text-white font-semibold text-sm sm:text-base">{selectedGroups.size} grup seçildi</p>
+              <p className="text-slate-400 text-xs sm:text-sm">Toplu işlemler için bir aksiyon seçin</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSelectedGroups(new Set())}
-              className="px-4 py-2 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors text-sm font-semibold"
+              className="px-3 sm:px-4 py-2 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors text-xs sm:text-sm font-semibold"
             >
               Temizle
             </button>
             <button
               onClick={handleBulkPromote}
               disabled={bulkPromoting}
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:opacity-90 transition-opacity text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
+              className="px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:opacity-90 transition-opacity text-xs sm:text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
             >
               {bulkPromoting ? (
                 <>
@@ -363,8 +378,9 @@ export default function GroupsPage() {
                 </>
               ) : (
                 <>
-                  <Crown className="w-4 h-4" />
-                  Seçilenlere Botu Ekle
+                  <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Seçilenlere Botu Ekle</span>
+                  <span className="sm:hidden">Bot Ekle</span>
                 </>
               )}
             </button>
@@ -377,16 +393,16 @@ export default function GroupsPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-20 bg-[#1e1e3a] rounded-2xl border border-indigo-500/20"
+          className="text-center py-12 sm:py-20 bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20"
         >
-          <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
-            <Users className="w-10 h-10 text-indigo-400" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 sm:w-10 sm:h-10 text-indigo-400" />
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2">Grup bulunamadi</h3>
-          <p className="text-slate-400">Arama kriterlerinize uygun grup bulunamadi.</p>
+          <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Grup bulunamadi</h3>
+          <p className="text-slate-400 text-sm sm:text-base">Arama kriterlerinize uygun grup bulunamadi.</p>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
           {filtered.map((g, index) => {
             const tc = TYPE_COLOR[g.chat_type] || TYPE_COLOR.group
             const isSelected = selectedGroups.has(g.id)
@@ -396,7 +412,7 @@ export default function GroupsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 * index }}
-                className={`bg-[#1e1e3a] rounded-2xl border p-5 transition-all cursor-pointer ${
+                className={`bg-[#1e1e3a] rounded-xl sm:rounded-2xl border p-3 sm:p-5 transition-all cursor-pointer relative ${
                   isSelected
                     ? 'border-indigo-500 bg-indigo-500/10'
                     : !g.is_active
@@ -420,27 +436,27 @@ export default function GroupsPage() {
               >
                 {/* Selection Checkbox */}
                 {selectedGroups.size > 0 && (
-                  <div className="absolute top-4 right-4 w-5 h-5 rounded border-2 border-indigo-500 flex items-center justify-center bg-indigo-500/20">
-                    {isSelected && <Check className="w-4 h-4 text-indigo-400" />}
+                  <div className="absolute top-3 sm:top-4 right-3 sm:right-4 w-5 h-5 rounded border-2 border-indigo-500 flex items-center justify-center bg-indigo-500/20">
+                    {isSelected && <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400" />}
                   </div>
                 )}
 
                 {/* Type badge */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-xl ${tc.bg} border ${tc.color}22 flex items-center justify-center ${tc.text}`}>
+                <div className="flex items-start justify-between mb-3 sm:mb-4">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${tc.bg} border ${tc.color}22 flex items-center justify-center ${tc.text}`}>
                     {g.chat_type === 'channel'
-                      ? <ExternalLink className="w-6 h-6" />
-                      : <Users className="w-6 h-6" />
+                      ? <ExternalLink className="w-5 h-5 sm:w-6 sm:h-6" />
+                      : <Users className="w-5 h-5 sm:w-6 sm:h-6" />
                     }
                   </div>
-                  <span className={`text-xs px-3 py-1 rounded-full font-semibold ${tc.bg} ${tc.text}`}>
+                  <span className={`text-xs px-2 sm:px-3 py-1 rounded-full font-semibold ${tc.bg} ${tc.text}`}>
                     {tc.label}
                   </span>
                 </div>
 
-                <div className="mb-4">
-                  <h3 className="text-white font-semibold text-base mb-2">{g.title}</h3>
-                  <div className="flex flex-wrap gap-2">
+                <div className="mb-3 sm:mb-4">
+                  <h3 className="text-white font-semibold text-sm sm:text-base mb-2">{g.title}</h3>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {/* Status badge */}
                     {!g.is_active ? (
                       <span className="text-xs px-2 py-1 rounded-full bg-rose-500/20 text-rose-400 font-semibold flex items-center gap-1">
@@ -483,31 +499,31 @@ export default function GroupsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 pt-3 border-t border-indigo-500/10" onClick={e => e.stopPropagation()}>
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-2 sm:pt-3 border-t border-indigo-500/10" onClick={e => e.stopPropagation()}>
                   <input
                     value={editTag[g.id] !== undefined ? editTag[g.id] : (g.tag || '')}
                     onChange={e => setEditTag({ ...editTag, [g.id]: e.target.value })}
                     placeholder="Etiket..."
-                    className="flex-1 bg-[#16162a] border border-indigo-500/20 rounded-lg px-3 py-2 text-xs text-white input-focus"
+                    className="flex-1 min-w-[80px] bg-[#16162a] border border-indigo-500/20 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs text-white input-focus"
                   />
                   <button
                     onClick={() => handleTagSave(g.id)}
-                    className="px-3 py-2 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors text-xs font-semibold"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors text-xs font-semibold"
                   >
                     Kaydet
                   </button>
                   {!g.is_admin && g.is_active && (
                     <button
                       onClick={() => handlePromoteBot(g)}
-                      className="px-3 py-2 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors text-xs font-semibold flex items-center gap-1"
+                      className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors text-xs font-semibold flex items-center gap-1"
                     >
                       <Crown className="w-3 h-3" />
-                      Admin Yap
+                      <span className="hidden sm:inline">Admin Yap</span>
                     </button>
                   )}
                   <button
                     onClick={() => handleBlacklist(g.id, g.is_blacklisted)}
-                    className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                    className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs font-semibold transition-colors ${
                       g.is_blacklisted
                         ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
                         : 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
@@ -527,19 +543,19 @@ export default function GroupsPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4"
           onClick={() => setShowPromoteModal(false)}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#1e1e3a] rounded-2xl border border-purple-500/30 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-purple-500/30 p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                  <Crown className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                  <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 Botu Yönetici Yap
               </h2>
@@ -547,24 +563,24 @@ export default function GroupsPage() {
                 onClick={() => setShowPromoteModal(false)}
                 className="p-2 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors"
               >
-                <XCircle className="w-5 h-5" />
+                <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/20">
-                <p className="text-purple-300 font-semibold mb-2">{promoteInfo.group_title}</p>
-                <p className="text-slate-400 text-sm">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="bg-purple-500/10 rounded-xl p-3 sm:p-4 border border-purple-500/20">
+                <p className="text-purple-300 font-semibold mb-2 text-sm sm:text-base">{promoteInfo.group_title}</p>
+                <p className="text-slate-400 text-xs sm:text-sm">
                   Bot kullanıcı adı: <span className="text-white font-mono">@{promoteInfo.bot_username}</span>
                 </p>
               </div>
 
-              <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="bg-amber-500/10 rounded-xl p-3 sm:p-4 border border-amber-500/20">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-amber-300 font-semibold mb-2">Önemli Not</p>
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-amber-300 font-semibold mb-2 text-sm sm:text-base">Önemli Not</p>
+                    <p className="text-slate-400 text-xs sm:text-sm">
                       Botlar kendilerini yönetici yapamazlar. Bu işlemi manuel olarak yapmanız gerekmektedir.
                       Aşağıdaki adımları takip edin.
                     </p>
@@ -572,9 +588,9 @@ export default function GroupsPage() {
                 </div>
               </div>
 
-              <div className="bg-[#16162a] rounded-xl p-4 border border-indigo-500/20">
-                <p className="text-indigo-300 font-semibold mb-3">Adımlar:</p>
-                <ol className="space-y-2 text-slate-300 text-sm">
+              <div className="bg-[#16162a] rounded-xl p-3 sm:p-4 border border-indigo-500/20">
+                <p className="text-indigo-300 font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Adımlar:</p>
+                <ol className="space-y-1.5 sm:space-y-2 text-slate-300 text-xs sm:text-sm">
                   {promoteInfo.instructions.map((step, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-xs font-bold flex-shrink-0">
@@ -586,15 +602,15 @@ export default function GroupsPage() {
                 </ol>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
                 {promoteInfo.group_link && (
                   <a
                     href={promoteInfo.group_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 px-4 py-3 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors text-center font-semibold flex items-center justify-center gap-2"
+                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors text-center font-semibold flex items-center justify-center gap-2 text-sm"
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     Gruba Git
                   </a>
                 )}
@@ -602,19 +618,19 @@ export default function GroupsPage() {
                   href={promoteInfo.bot_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 px-4 py-3 rounded-xl bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors text-center font-semibold flex items-center justify-center gap-2"
+                  className="flex-1 px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors text-center font-semibold flex items-center justify-center gap-2 text-sm"
                 >
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   Botu Görüntüle
                 </a>
               </div>
 
-              <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+              <div className="bg-emerald-500/10 rounded-xl p-3 sm:p-4 border border-emerald-500/20">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-emerald-300 font-semibold mb-1">Anonim Mod</p>
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-emerald-300 font-semibold mb-1 text-sm sm:text-base">Anonim Mod</p>
+                    <p className="text-slate-400 text-xs sm:text-sm">
                       Bot anonim olarak çalışacak, yönetici işlemleri grupta görünmeyecek.
                       "Yönetici Ekleme" yetkisi vermediğinizden emin olun (güvenlik için).
                     </p>
@@ -623,13 +639,13 @@ export default function GroupsPage() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-4 sm:mt-6 flex justify-end">
               <button
                 onClick={() => {
                   setShowPromoteModal(false)
                   load()
                 }}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold hover:opacity-90 transition-opacity"
+                className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold hover:opacity-90 transition-opacity text-sm"
               >
                 Tamam, Yetkileri Verdim
               </button>
@@ -643,19 +659,19 @@ export default function GroupsPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4"
           onClick={() => setShowBulkPromoteModal(false)}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#1e1e3a] rounded-2xl border border-purple-500/30 p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-purple-500/30 p-4 sm:p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                  <Crown className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                  <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 {bulkPromoteInfo.groups.length} Gruba Botu Ekle
               </h2>
@@ -663,31 +679,31 @@ export default function GroupsPage() {
                 onClick={() => setShowBulkPromoteModal(false)}
                 className="p-2 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors"
               >
-                <XCircle className="w-5 h-5" />
+                <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Summary */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-indigo-500/10 rounded-lg p-3 border border-indigo-500/20">
-                  <p className="text-indigo-300 font-semibold text-sm">Toplam Grup</p>
-                  <p className="text-white text-2xl font-bold">{bulkPromoteInfo.total}</p>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="bg-indigo-500/10 rounded-lg p-2 sm:p-3 border border-indigo-500/20">
+                  <p className="text-indigo-300 font-semibold text-xs sm:text-sm">Toplam Grup</p>
+                  <p className="text-white text-xl sm:text-2xl font-bold">{bulkPromoteInfo.total}</p>
                 </div>
-                <div className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
-                  <p className="text-amber-300 font-semibold text-sm">Zaten Admin</p>
-                  <p className="text-white text-2xl font-bold">{bulkPromoteInfo.already_admin}</p>
+                <div className="bg-amber-500/10 rounded-lg p-2 sm:p-3 border border-amber-500/20">
+                  <p className="text-amber-300 font-semibold text-xs sm:text-sm">Zaten Admin</p>
+                  <p className="text-white text-xl sm:text-2xl font-bold">{bulkPromoteInfo.already_admin}</p>
                 </div>
-                <div className="bg-rose-500/10 rounded-lg p-3 border border-rose-500/20">
-                  <p className="text-rose-300 font-semibold text-sm">Üye Değil</p>
-                  <p className="text-white text-2xl font-bold">{bulkPromoteInfo.not_member}</p>
+                <div className="bg-rose-500/10 rounded-lg p-2 sm:p-3 border border-rose-500/20">
+                  <p className="text-rose-300 font-semibold text-xs sm:text-sm">Üye Değil</p>
+                  <p className="text-white text-xl sm:text-2xl font-bold">{bulkPromoteInfo.not_member}</p>
                 </div>
               </div>
 
               {/* Instructions */}
-              <div className="bg-[#16162a] rounded-xl p-4 border border-indigo-500/20">
-                <p className="text-indigo-300 font-semibold mb-3">Yapılacak İşlemler:</p>
-                <ol className="space-y-2 text-slate-300 text-sm">
+              <div className="bg-[#16162a] rounded-xl p-3 sm:p-4 border border-indigo-500/20">
+                <p className="text-indigo-300 font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Yapılacak İşlemler:</p>
+                <ol className="space-y-1.5 sm:space-y-2 text-slate-300 text-xs sm:text-sm">
                   {bulkPromoteInfo.instructions.map((step, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-indigo-400">•</span>
@@ -698,18 +714,18 @@ export default function GroupsPage() {
               </div>
 
               {/* Groups List */}
-              <div className="bg-[#16162a] rounded-xl p-4 border border-indigo-500/20">
-                <p className="text-indigo-300 font-semibold mb-3">Seçilen Gruplar:</p>
+              <div className="bg-[#16162a] rounded-xl p-3 sm:p-4 border border-indigo-500/20">
+                <p className="text-indigo-300 font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Seçilen Gruplar:</p>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {bulkPromoteInfo.groups.map((group, idx) => (
-                    <div key={idx} className="flex items-start gap-3 p-2 bg-indigo-500/5 rounded-lg border border-indigo-500/10">
+                    <div key={idx} className="flex items-start gap-2 sm:gap-3 p-2 bg-indigo-500/5 rounded-lg border border-indigo-500/10">
                       <div className="flex-shrink-0 mt-0.5">
                         {group.is_admin ? (
-                          <CheckCircle className="w-5 h-5 text-emerald-400" />
+                          <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
                         ) : !group.is_member ? (
-                          <AlertCircle className="w-5 h-5 text-rose-400" />
+                          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
                         ) : (
-                          <Crown className="w-5 h-5 text-amber-400" />
+                          <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -727,12 +743,12 @@ export default function GroupsPage() {
               </div>
 
               {/* Warning */}
-              <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="bg-amber-500/10 rounded-xl p-3 sm:p-4 border border-amber-500/20">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-amber-300 font-semibold mb-2">Önemli Not</p>
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-amber-300 font-semibold mb-2 text-sm sm:text-base">Önemli Not</p>
+                    <p className="text-slate-400 text-xs sm:text-sm">
                       Her gruba giderek botu yönetici yapmanız gerekecektir. Telegram API'sinin kısıtlamaları nedeniyle bu işlem otomatik yapılamaz.
                       Bot anonim olarak çalışacak şekilde yapılandırıldığından "Yönetici Ekleme" yetkisi vermediğinizden emin olun.
                     </p>
@@ -741,10 +757,10 @@ export default function GroupsPage() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-end gap-3">
               <button
                 onClick={() => setShowBulkPromoteModal(false)}
-                className="px-6 py-3 rounded-xl bg-slate-500/20 text-slate-300 hover:bg-slate-500/30 transition-colors font-semibold"
+                className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl bg-slate-500/20 text-slate-300 hover:bg-slate-500/30 transition-colors font-semibold text-sm"
               >
                 Kapat
               </button>
@@ -754,7 +770,7 @@ export default function GroupsPage() {
                   setSelectedGroups(new Set())
                   load()
                 }}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold hover:opacity-90 transition-opacity"
+                className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold hover:opacity-90 transition-opacity text-sm"
               >
                 Tamam, Anladım
               </button>

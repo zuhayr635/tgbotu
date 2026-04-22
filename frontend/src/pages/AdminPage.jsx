@@ -102,7 +102,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Title */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -110,17 +110,17 @@ export default function AdminPage() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Shield className="w-6 h-6 text-indigo-400" />
+          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 sm:gap-3">
+            <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400" />
             Admin Paneli
           </h1>
-          <p className="text-slate-400">Kullanıcı yönetimi ve sistem istatistikleri</p>
+          <p className="text-slate-400 text-sm sm:text-base">Kullanıcı yönetimi ve sistem istatistikleri</p>
         </div>
       </motion.div>
 
       {/* Stats Grid */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           <StatCard
             title="Toplam Kullanıcı"
             value={stats.total_users}
@@ -156,13 +156,13 @@ export default function AdminPage() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex gap-2"
+        className="flex flex-wrap gap-2 sm:gap-3"
       >
         {['all', 'pending', 'approved', 'rejected'].map((status) => (
           <button
             key={status}
             onClick={() => setFilter(status)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
               filter === status
                 ? 'bg-indigo-600 text-white'
                 : 'bg-[#16162a] text-slate-400 hover:bg-indigo-500/20 hover:text-indigo-300'
@@ -177,18 +177,18 @@ export default function AdminPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 overflow-hidden"
+        className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 overflow-hidden"
       >
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-max sm:min-w-full">
             <thead>
               <tr className="border-b border-indigo-500/10">
-                <th className="text-left p-4 text-slate-400 font-medium text-sm">Kullanıcı</th>
-                <th className="text-left p-4 text-slate-400 font-medium text-sm">Durum</th>
-                <th className="text-left p-4 text-slate-400 font-medium text-sm">Plan</th>
-                <th className="text-left p-4 text-slate-400 font-medium text-sm">Token</th>
-                <th className="text-left p-4 text-slate-400 font-medium text-sm">Kayıt Tarihi</th>
-                <th className="text-right p-4 text-slate-400 font-medium text-sm">İşlemler</th>
+                <th className="text-left p-2 sm:p-4 text-slate-400 font-medium text-xs sm:text-sm">Kullanıcı</th>
+                <th className="text-left p-2 sm:p-4 text-slate-400 font-medium text-xs sm:text-sm">Durum</th>
+                <th className="text-left p-2 sm:p-4 text-slate-400 font-medium text-xs sm:text-sm">Plan</th>
+                <th className="text-left p-2 sm:p-4 text-slate-400 font-medium text-xs sm:text-sm">Token</th>
+                <th className="text-left p-2 sm:p-4 text-slate-400 font-medium text-xs sm:text-sm hidden sm:table-cell">Kayıt Tarihi</th>
+                <th className="text-right p-2 sm:p-4 text-slate-400 font-medium text-xs sm:text-sm">İşlemler</th>
               </tr>
             </thead>
             <tbody>
@@ -197,48 +197,48 @@ export default function AdminPage() {
                   key={user.id}
                   className="border-b border-indigo-500/10 hover:bg-indigo-500/5 transition-colors"
                 >
-                  <td className="p-4">
+                  <td className="p-2 sm:p-4">
                     <div>
-                      <div className="text-white font-medium">{user.username}</div>
-                      <div className="text-slate-500 text-sm">{user.email}</div>
+                      <div className="text-white font-medium text-xs sm:text-base">{user.username}</div>
+                      <div className="text-slate-500 text-xs sm:text-sm">{user.email}</div>
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-2 sm:p-4">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColors[user.approval_status]}`}
+                      className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium border ${statusColors[user.approval_status]}`}
                     >
                       {user.approval_status}
                     </span>
                   </td>
-                  <td className="p-4">
+                  <td className="p-2 sm:p-4">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium border ${planColors[user.plan_type]}`}
+                      className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium border ${planColors[user.plan_type]}`}
                     >
                       {user.plan_type}
                     </span>
                   </td>
-                  <td className="p-4">
-                    <div className="text-white font-medium">{user.tokens}</div>
+                  <td className="p-2 sm:p-4">
+                    <div className="text-white font-medium text-xs sm:text-base">{user.tokens}</div>
                   </td>
-                  <td className="p-4">
-                    <div className="text-slate-400 text-sm">
+                  <td className="p-2 sm:p-4 hidden sm:table-cell">
+                    <div className="text-slate-400 text-xs sm:text-sm">
                       {new Date(user.created_at).toLocaleDateString('tr-TR')}
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="p-2 sm:p-4">
+                    <div className="flex items-center justify-end gap-1 sm:gap-2">
                       {user.approval_status === 'pending' && (
                         <>
                           <button
                             onClick={() => handleApprove(user.id)}
-                            className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
+                            className="p-1.5 sm:p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
                             title="Onayla"
                           >
                             <Check className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleReject(user.id)}
-                            className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                            className="p-1.5 sm:p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
                             title="Reddet"
                           >
                             <X className="w-4 h-4" />
@@ -247,7 +247,7 @@ export default function AdminPage() {
                       )}
                       <button
                         onClick={() => handleDelete(user.id)}
-                        className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                        className="p-1.5 sm:p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
                         title="Sil"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -258,7 +258,7 @@ export default function AdminPage() {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                  <td colSpan={6} className="p-6 sm:p-8 text-center text-slate-400 text-xs sm:text-base">
                     Kullanıcı bulunamadı
                   </td>
                 </tr>

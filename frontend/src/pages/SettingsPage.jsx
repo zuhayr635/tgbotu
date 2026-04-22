@@ -87,34 +87,34 @@ export default function SettingsPage() {
   if (!s) return <div className="text-slate-400 p-10">Yukleniyor...</div>
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-indigo-600 flex items-center justify-center">
-              <SettingsIcon className="w-5 h-5 text-white" />
+          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-slate-500 to-indigo-600 flex items-center justify-center">
+              <SettingsIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             {t('settings.title')}
           </h1>
-          <p className="text-slate-400 mt-1">Sistem yapılandırmasını yönetin</p>
+          <p className="text-slate-400 mt-1 text-sm sm:text-base">Sistem yapılandırmasını yönetin</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleSave}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl btn-gradient text-white font-medium shadow-lg shadow-indigo-500/30"
+          className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-xl btn-gradient text-white font-medium shadow-lg shadow-indigo-500/30 text-xs sm:text-sm"
         >
-          {saved ? <Check className="w-5 h-5" /> : <Save className="w-5 h-5" />}
+          {saved ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <Save className="w-4 h-4 sm:w-5 sm:h-5" />}
           {saved ? 'Kaydedildi' : t('settings.save')}
         </motion.button>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Sidebar Tabs */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -122,7 +122,7 @@ export default function SettingsPage() {
           transition={{ delay: 0.1 }}
           className="lg:col-span-1"
         >
-          <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-4 space-y-2">
+          <div className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 p-3 sm:p-4 space-y-2">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
@@ -130,14 +130,14 @@ export default function SettingsPage() {
                   key={tab.id}
                   whileHover={{ x: 4 }}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all ${
                     activeTab === tab.id
                       ? 'bg-gradient-to-r from-indigo-600/80 to-purple-600/80 text-white'
                       : 'text-slate-400 hover:bg-indigo-500/10 hover:text-indigo-300'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{tab.label}</span>
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="font-medium text-xs sm:text-sm">{tab.label}</span>
                 </motion.button>
               )
             })}
@@ -152,34 +152,34 @@ export default function SettingsPage() {
           className="lg:col-span-3"
         >
           {activeTab === 'bot' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Bot Token */}
-              <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Key className="w-5 h-5 text-indigo-400" />
+              <div className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+                  <Key className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
                   {t('settings.botToken')}
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Bot Token</label>
-                    <div className="flex gap-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Bot Token</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type={tokenVisible ? 'text' : 'password'}
                         value={token}
                         onChange={e => setToken(e.target.value)}
                         placeholder={s.bot_token_set ? '(degistirmek icin yaz)' : t('settings.botTokenPlaceholder')}
-                        className="flex-1 bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                        className="flex-1 bg-[#16162a] border border-indigo-500/20 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white input-focus text-sm"
                       />
                       <button
                         onClick={() => setTokenVisible(!tokenVisible)}
-                        className="px-4 py-3 rounded-xl bg-[#1e1e3a] border border-indigo-500/20 text-slate-400 hover:text-indigo-400 transition-colors"
+                        className="px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-[#1e1e3a] border border-indigo-500/20 text-slate-400 hover:text-indigo-400 transition-colors text-xs sm:text-sm"
                       >
                         {tokenVisible ? 'Gizle' : 'Goster'}
                       </button>
                       <button
                         onClick={handleTest}
                         disabled={testing}
-                        className="px-4 py-3 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors disabled:opacity-50"
+                        className="px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors disabled:opacity-50 text-xs sm:text-sm"
                       >
                         {testing ? '...' : t('settings.testToken')}
                       </button>
@@ -187,12 +187,12 @@ export default function SettingsPage() {
                   </div>
 
                   {s.bot_username && (
-                    <div className="text-slate-400 text-sm">@{s.bot_username}</div>
+                    <div className="text-slate-400 text-xs sm:text-sm">@{s.bot_username}</div>
                   )}
 
                   <button
                     onClick={handleBotToggle}
-                    className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
+                    className={`w-full py-2 sm:py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all text-xs sm:text-sm ${
                       s.bot_is_running
                         ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
                         : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
@@ -204,51 +204,51 @@ export default function SettingsPage() {
               </div>
 
               {/* Rate Limiting */}
-              <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-indigo-400" />
+              <div className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
                   Gonderim Ayarlari
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.minDelay')}</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">{t('settings.minDelay')}</label>
                     <input
                       type="number"
                       value={minDelay}
                       onChange={e => setMinDelay(+e.target.value)}
                       min={1}
-                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white input-focus text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.maxDelay')}</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">{t('settings.maxDelay')}</label>
                     <input
                       type="number"
                       value={maxDelay}
                       onChange={e => setMaxDelay(+e.target.value)}
                       min={1}
-                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white input-focus text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.maxRetries')}</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">{t('settings.maxRetries')}</label>
                     <input
                       type="number"
                       value={maxRetries}
                       onChange={e => setMaxRetries(+e.target.value)}
                       min={0}
                       max={5}
-                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white input-focus text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.storageWarnMb')}</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">{t('settings.storageWarnMb')}</label>
                     <input
                       type="number"
                       value={warnMb}
                       onChange={e => setWarnMb(+e.target.value)}
                       min={10}
-                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white input-focus text-sm"
                     />
                   </div>
                 </div>
@@ -257,19 +257,19 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'notifications' && (
-            <div className="space-y-6">
-              <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-indigo-400" />
+            <div className="space-y-4 sm:space-y-6">
+              <div className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
                   {t('settings.notificationChatId')}
                 </h3>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Chat ID</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Chat ID</label>
                   <input
                     value={notifChatId}
                     onChange={e => setNotifChatId(e.target.value)}
                     placeholder="123456789"
-                    className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                    className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white input-focus text-sm"
                   />
                   <p className="text-xs text-slate-500 mt-2">{t('settings.notificationChatIdHelp')}</p>
                 </div>
@@ -278,34 +278,34 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'security' && (
-            <div className="space-y-6">
-              <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-indigo-400" />
+            <div className="space-y-4 sm:space-y-6">
+              <div className="bg-[#1e1e3a] rounded-xl sm:rounded-2xl border border-indigo-500/20 p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+                  <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
                   {t('settings.changePassword')}
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.currentPassword')}</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">{t('settings.currentPassword')}</label>
                     <input
                       type="password"
                       value={curPass}
                       onChange={e => setCurPass(e.target.value)}
-                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white input-focus text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">{t('settings.newPassword')}</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">{t('settings.newPassword')}</label>
                     <input
                       type="password"
                       value={newPass}
                       onChange={e => setNewPass(e.target.value)}
-                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-4 py-3 text-white input-focus"
+                      className="w-full bg-[#16162a] border border-indigo-500/20 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white input-focus text-sm"
                     />
                   </div>
                   <button
                     onClick={handleChangePassword}
-                    className="w-full py-3 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors font-semibold"
+                    className="w-full py-2 sm:py-3 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors font-semibold text-xs sm:text-sm"
                   >
                     {t('settings.changePassword')}
                   </button>
