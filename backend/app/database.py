@@ -134,8 +134,11 @@ async def init_db():
         ))
         
         # Default admin kullanıcısı oluştur (eğer yoksa)
-        await conn.execute(text("""
+        admin_username = settings.admin_username or 'admin'
+        # Şifre hash: zuhayr635:bana1kolaal -> $2b$12$4tDhWulynaeTyhwI20o1TuPpZ3ScY2KctD.qPgT2p/Uyi4M25mAOS
+        password_hash = '$2b$12$4tDhWulynaeTyhwI20o1TuPpZ3ScY2KctD.qPgT2p/Uyi4M25mAOS'
+        await conn.execute(text(f"""
             INSERT INTO users (username, email, password_hash, is_admin, approval_status, plan_type, tokens)
-            VALUES ('admin', 'admin@localhost', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5aq7k0LMX9e3i', true, 'approved', 'free', 1000)
+            VALUES ('{admin_username}', 'admin@localhost', '{password_hash}', true, 'approved', 'free', 1000)
             ON CONFLICT (username) DO NOTHING
         """))
