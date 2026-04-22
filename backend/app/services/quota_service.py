@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from app.models.user import User
 from app.models.plan_limits import PlanLimits, PlanType
 from app.models.broadcast import Broadcast
-from app.models.scheduled_task import ScheduledTask
+from app.models.schedule import ScheduledTask
 
 
 class QuotaService:
