@@ -1,5 +1,6 @@
-from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, Integer, Enum
+from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, Integer, Enum, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 import enum
 from app.database import Base
 
@@ -25,5 +26,14 @@ class Group(Base):
     can_post = Column(Boolean, default=None, nullable=True)  # Mesaj gönderme yetkisi var mı (None=kontrol edilmedi)
     restrict_info = Column(String(255), nullable=True)  # Kısıtlama sebebi
     tag = Column(String(100), nullable=True)            # Kullanıcının verdiği etiket
+    
+    # Multi-tenant
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    bot_token_id = Column(Integer, ForeignKey("bot_tokens.id"), nullable=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # İlişkiler
+    user = relationship("User", back_populates="groups")
+    bot_token = relationship("BotToken", back_populates="groups")

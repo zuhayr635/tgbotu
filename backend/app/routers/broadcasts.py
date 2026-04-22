@@ -58,7 +58,7 @@ async def create_broadcast(
     parse_mode: str = Form(default="HTML"),
     media: Optional[UploadFile] = File(default=None),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
     import json
 
@@ -90,12 +90,22 @@ async def create_broadcast(
         with open(media_path, "wb") as f:
             f.write(content)
 
+    # Get user_id from token
+    from app.database import AsyncSessionLocal
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User).where(User.username == current_user)
+        )
+        user = result.scalar_one_or_none()
+        user_id = user.id if user else None
+
     broadcast = Broadcast(
         message_text=message_text or None,
         media_type=media_type,
         media_path=media_path,
         disable_preview=disable_preview,
         parse_mode=parse_mode,
+        user_id=user_id,
     )
     db.add(broadcast)
     await db.commit()
@@ -112,10 +122,17 @@ async def list_broadcasts(
     skip: int = 0,
     limit: int = 20,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
     result = await db.execute(
-        select(Broadcast).order_by(desc(Broadcast.created_at)).offset(skip).limit(limit)
+        select(Broadcast).where(Broadcast.user_id == user_id).order_by(desc(Broadcast.created_at)).offset(skip).limit(limit)
     )
     return result.scalars().all()
 
@@ -124,9 +141,16 @@ async def list_broadcasts(
 async def get_broadcast(
     broadcast_id: int,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
-    result = await db.execute(select(Broadcast).where(Broadcast.id == broadcast_id))
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
+    result = await db.execute(select(Broadcast).where(Broadcast.id == broadcast_id).where(Broadcast.user_id == user_id))
     b = result.scalar_one_or_none()
     if not b:
         raise HTTPException(404, "Yayın bulunamadı")
@@ -137,8 +161,22 @@ async def get_broadcast(
 async def get_broadcast_logs(
     broadcast_id: int,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
+    # Verify broadcast belongs to user
+    result_bc = await db.execute(
+        select(Broadcast).where(Broadcast.id == broadcast_id).where(Broadcast.user_id == user_id)
+    )
+    if not result_bc.scalar_one_or_none():
+        raise HTTPException(404, "Yayın bulunamadı")
+
     result = await db.execute(
         select(BroadcastLog)
         .where(BroadcastLog.broadcast_id == broadcast_id)
@@ -151,8 +189,15 @@ async def get_broadcast_logs(
 async def retry_failed(
     broadcast_id: int,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
     result = await db.execute(
         select(BroadcastLog)
         .where(BroadcastLog.broadcast_id == broadcast_id)
@@ -162,7 +207,7 @@ async def retry_failed(
     if not failed_logs:
         raise HTTPException(400, "Başarısız grup yok")
 
-    original = await db.execute(select(Broadcast).where(Broadcast.id == broadcast_id))
+    original = await db.execute(select(Broadcast).where(Broadcast.id == broadcast_id).where(Broadcast.user_id == user_id))
     orig = original.scalar_one_or_none()
     if not orig:
         raise HTTPException(404, "Yayın bulunamadı")
@@ -175,6 +220,7 @@ async def retry_failed(
         media_file_id=orig.media_file_id,
         disable_preview=orig.disable_preview,
         parse_mode=orig.parse_mode,
+        user_id=user_id,
     )
     db.add(new_bc)
     await db.commit()

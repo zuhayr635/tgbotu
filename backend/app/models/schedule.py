@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, Text, String, DateTime, Boolean, JSON, Enum
+from sqlalchemy import Column, Integer, Text, String, DateTime, Boolean, JSON, Enum, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 import enum
 from app.database import Base
 
@@ -41,6 +42,14 @@ class ScheduledTask(Base):
     repeat_end_at = Column(DateTime(timezone=True), nullable=True)  # Tekrar bitiş tarihi
 
     broadcast_id = Column(Integer, nullable=True)
+    
+    # Multi-tenant
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    tokens_cost = Column(Integer, default=1)
+    tokens_used = Column(Integer, default=0)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # İlişkiler
+    user = relationship("User", back_populates="scheduled_tasks")

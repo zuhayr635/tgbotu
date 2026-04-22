@@ -35,12 +35,18 @@ class Broadcast(Base):
     sent_count = Column(Integer, default=0)
     failed_count = Column(Integer, default=0)
     skipped_count = Column(Integer, default=0)
+    
+    # Multi-tenant
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    tokens_cost = Column(Integer, default=1)
+    tokens_used = Column(Integer, default=0)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     started_at = Column(DateTime(timezone=True), nullable=True)
     finished_at = Column(DateTime(timezone=True), nullable=True)
 
     logs = relationship("BroadcastLog", back_populates="broadcast", lazy="dynamic")
+    user = relationship("User", back_populates="broadcasts")
 
 
 class BroadcastLog(Base):

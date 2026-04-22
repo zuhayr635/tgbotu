@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Enum, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 import enum
 from app.database import Base
 
@@ -22,5 +23,12 @@ class Template(Base):
     media_file_id = Column(String(500), nullable=True)
     disable_preview = Column(Boolean, default=False)
     parse_mode = Column(String(10), default="HTML")
+    
+    # Multi-tenant
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # İlişkiler
+    user = relationship("User", back_populates="templates")

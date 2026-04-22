@@ -32,18 +32,32 @@ class TemplateResponse(BaseModel):
 @router.get("", response_model=list[TemplateResponse])
 async def list_templates(
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
-    result = await db.execute(select(Template).order_by(Template.category, Template.name))
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
+    result = await db.execute(select(Template).where(Template.user_id == user_id).order_by(Template.category, Template.name))
     return result.scalars().all()
 
 
 @router.get("/categories")
 async def list_categories(
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
-    result = await db.execute(select(Template.category).distinct())
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
+    result = await db.execute(select(Template.category).where(Template.user_id == user_id).distinct())
     return [r[0] for r in result.fetchall() if r[0]]
 
 
@@ -56,7 +70,7 @@ async def create_template(
     parse_mode: str = Form(default="HTML"),
     media: Optional[UploadFile] = File(default=None),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
     media_path = None
     media_type = "none"
@@ -74,6 +88,14 @@ async def create_template(
         with open(media_path, "wb") as f:
             f.write(content)
 
+    # Get user_id from token
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
     tpl = Template(
         name=name,
         category=category or None,
@@ -82,6 +104,7 @@ async def create_template(
         media_path=media_path,
         disable_preview=disable_preview,
         parse_mode=parse_mode,
+        user_id=user_id,
     )
     db.add(tpl)
     await db.commit()
@@ -93,9 +116,16 @@ async def create_template(
 async def delete_template(
     template_id: int,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
-    result = await db.execute(select(Template).where(Template.id == template_id))
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
+    result = await db.execute(select(Template).where(Template.id == template_id).where(Template.user_id == user_id))
     tpl = result.scalar_one_or_none()
     if not tpl:
         raise HTTPException(404, "Şablon bulunamadı")

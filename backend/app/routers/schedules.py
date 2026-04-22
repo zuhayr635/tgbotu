@@ -47,7 +47,7 @@ async def create_schedule(
     parse_mode: str = Form(default="HTML"),
     media: Optional[UploadFile] = File(default=None),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
     try:
         target_ids = json.loads(chat_ids)
@@ -88,6 +88,14 @@ async def create_schedule(
         except Exception:
             pass
 
+    # Get user_id from token
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
     task = ScheduledTask(
         message_text=message_text or None,
         media_type=media_type,
@@ -98,6 +106,7 @@ async def create_schedule(
         run_at=run_datetime,
         repeat_type=repeat_type,
         repeat_end_at=repeat_end_datetime,
+        user_id=user_id,
     )
     db.add(task)
     await db.commit()
@@ -114,9 +123,16 @@ async def create_schedule(
 async def list_schedules(
     status: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
-    query = select(ScheduledTask).order_by(ScheduledTask.run_at)
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
+    query = select(ScheduledTask).where(ScheduledTask.user_id == user_id).order_by(ScheduledTask.run_at)
     if status:
         query = query.where(ScheduledTask.status == status)
     result = await db.execute(query)
@@ -127,9 +143,16 @@ async def list_schedules(
 async def cancel_task(
     task_id: int,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
-    result = await db.execute(select(ScheduledTask).where(ScheduledTask.id == task_id))
+    from app.models.user import User
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
+    result = await db.execute(select(ScheduledTask).where(ScheduledTask.id == task_id).where(ScheduledTask.user_id == user_id))
     task = result.scalar_one_or_none()
     if not task:
         raise HTTPException(404, "Görev bulunamadı")

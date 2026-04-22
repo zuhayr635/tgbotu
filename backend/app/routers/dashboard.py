@@ -20,11 +20,23 @@ settings = get_settings()
 @router.get("")
 async def get_dashboard(
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: str = Depends(get_current_user),
 ):
+    from app.models.user import User
+    
+    # Get user_id from token
+    result_user = await db.execute(
+        select(User).where(User.username == current_user)
+    )
+    user = result_user.scalar_one_or_none()
+    user_id = user.id if user else None
+
     # Toplam aktif grup/kanal
     total_groups = await db.scalar(
-        select(func.count(Group.id)).where(Group.is_active == True).where(Group.is_blacklisted == False)
+        select(func.count(Group.id))
+        .where(Group.user_id == user_id)
+        .where(Group.is_active == True)
+        .where(Group.is_blacklisted == False)
     )
 
     # Bugün gönderilen yayın sayısı
@@ -32,24 +44,31 @@ async def get_dashboard(
     today_start = datetime.combine(date.today(), datetime.min.time())
     today_broadcasts = await db.scalar(
         select(func.count(Broadcast.id))
+        .where(Broadcast.user_id == user_id)
         .where(Broadcast.created_at >= today_start)
         .where(Broadcast.status == BroadcastStatus.completed)
     )
 
     # Bekleyen görevler
     pending_tasks = await db.scalar(
-        select(func.count(ScheduledTask.id)).where(ScheduledTask.status == TaskStatus.pending)
+        select(func.count(ScheduledTask.id))
+        .where(ScheduledTask.user_id == user_id)
+        .where(ScheduledTask.status == TaskStatus.pending)
     )
 
     # Son 5 yayın
     result = await db.execute(
-        select(Broadcast).order_by(desc(Broadcast.created_at)).limit(5)
+        select(Broadcast)
+        .where(Broadcast.user_id == user_id)
+        .order_by(desc(Broadcast.created_at))
+        .limit(5)
     )
     recent = result.scalars().all()
 
     # Yaklaşan 3 görev
     result2 = await db.execute(
         select(ScheduledTask)
+        .where(ScheduledTask.user_id == user_id)
         .where(ScheduledTask.status == TaskStatus.pending)
         .order_by(ScheduledTask.run_at)
         .limit(3)

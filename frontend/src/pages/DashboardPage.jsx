@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { getDashboard, cleanupStorage } from '../lib/api'
+import { getDashboard, cleanupStorage, getPlanInfo, getTokenInfo } from '../lib/api'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import StatCard from '../components/StatCard'
-import { Send, Radio, Users, MessageSquare, BarChart3, Zap, Clock, TrendingUp } from 'lucide-react'
+import { Send, Radio, Users, MessageSquare, BarChart3, Zap, Clock, TrendingUp, CreditCard } from 'lucide-react'
 
 const statusColor = {
   completed: '#22c55e',
@@ -26,11 +26,19 @@ const statusBg = {
 export default function DashboardPage() {
   const { t } = useTranslation()
   const [data, setData] = useState(null)
+  const [planInfo, setPlanInfo] = useState(null)
+  const [tokenInfo, setTokenInfo] = useState(null)
 
   const load = async () => {
     try {
-      const res = await getDashboard()
-      setData(res.data)
+      const [dashRes, planRes, tokenRes] = await Promise.all([
+        getDashboard(),
+        getPlanInfo().catch(() => null),
+        getTokenInfo().catch(() => null),
+      ])
+      setData(dashRes.data)
+      if (planRes) setPlanInfo(planRes.data)
+      if (tokenRes) setTokenInfo(tokenRes.data)
     } catch { toast.error('Yuklenemedi') }
   }
 
@@ -86,6 +94,85 @@ export default function DashboardPage() {
           >
             {t('dashboard.cleanupStorage')}
           </button>
+        </motion.div>
+      )}
+
+      {/* Plan & Token Info */}
+      {(planInfo || tokenInfo) && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
+          <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <CreditCard className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <div className="text-slate-400 text-sm">Mevcut Plan</div>
+                <div className="text-white font-semibold">
+                  {planInfo?.plan_type === 'free' ? 'Ücretsiz' :
+                   planInfo?.plan_type === 'weekly' ? 'Haftalık' :
+                   planInfo?.plan_type === 'monthly' ? 'Aylık' : 'Ücretsiz'}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-4 text-sm">
+              <div>
+                <span className="text-slate-500">Max Bot:</span>
+                <span className="text-white ml-1">{planInfo?.max_bots || 1}</span>
+              </div>
+              <div>
+                <span className="text-slate-500">Max Grup:</span>
+                <span className="text-white ml-1">{planInfo?.max_groups || 5}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <div className="text-slate-400 text-sm">Token Bakiyesi</div>
+                <div className="text-white font-semibold">{tokenInfo?.current_balance || 0}</div>
+              </div>
+            </div>
+            <div className="text-sm text-slate-400">
+              Bu Dönem: {tokenInfo?.tokens_used_period || 0} / {tokenInfo?.tokens_per_period || 100}
+            </div>
+          </div>
+
+          <div className="bg-[#1e1e3a] rounded-2xl border border-indigo-500/20 p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <div className="text-slate-400 text-sm">Kota Kullanımı</div>
+                <div className="text-white font-semibold">
+                  {tokenInfo?.tokens_per_period
+                    ? Math.round((tokenInfo.tokens_used_period / tokenInfo.tokens_per_period) * 100)
+                    : 0}%
+                </div>
+              </div>
+            </div>
+            <div className="h-2 bg-[#16162a] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full transition-all"
+                style={{
+                  width: `${Math.min(
+                    tokenInfo?.tokens_per_period
+                      ? (tokenInfo.tokens_used_period / tokenInfo.tokens_per_period) * 100
+                      : 0,
+                    100
+                  )}%`
+                }}
+              />
+            </div>
+          </div>
         </motion.div>
       )}
 

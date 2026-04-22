@@ -7,19 +7,39 @@ import {
   Settings,
   MessageCircle,
   LogOut,
+  Shield,
+  CreditCard,
+  Bot,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { getMe } from '../lib/api'
+import { useEffect, useState } from 'react'
 
 const menuItems = [
   { id: 'dashboard', label: 'Gösterge Paneli', icon: LayoutDashboard },
   { id: 'broadcast', label: 'Yeni Yayın', icon: Send },
   { id: 'groups', label: 'Gruplar', icon: Users },
   { id: 'active', label: 'Aktif Yayınlar', icon: Radio },
+  { id: 'bots', label: 'Bot Yönetimi', icon: Bot },
+  { id: 'plan', label: 'Plan & Üyelik', icon: CreditCard },
   { id: 'settings', label: 'Ayarlar', icon: Settings },
+]
+
+const adminMenuItems = [
+  { id: 'admin', label: 'Admin Paneli', icon: Shield },
 ]
 
 export default function Sidebar({ currentPage, onPageChange, onLogout }) {
   const { t, i18n } = useTranslation()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    getMe().then(res => {
+      setIsAdmin(res.data.is_admin)
+    }).catch(() => setIsAdmin(false))
+  }, [])
+
+  const items = isAdmin ? [...menuItems, ...adminMenuItems] : menuItems
 
   return (
     <motion.aside
@@ -49,7 +69,7 @@ export default function Sidebar({ currentPage, onPageChange, onLogout }) {
       {/* Navigation */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
-          {menuItems.map((item, index) => {
+          {items.map((item, index) => {
             const Icon = item.icon
             const isActive = currentPage === item.id
             return (

@@ -15,6 +15,7 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
       window.location.href = '/login'
     }
     return Promise.reject(err)
@@ -30,7 +31,33 @@ export const login = (username, password) => {
   form.append('password', password)
   return api.post('/auth/login', form)
 }
+export const register = (data) => api.post('/auth/register', data)
+export const getMe = () => api.get('/auth/me')
 export const changePassword = (data) => api.post('/auth/change-password', data)
+
+// Users
+export const getUserProfile = () => api.get('/users/profile')
+export const updateUserProfile = (data) => api.put('/users/profile', data)
+export const getTokenInfo = () => api.get('/users/tokens')
+export const getPlanInfo = () => api.get('/users/plan')
+
+// Admin
+export const adminGetUsers = (statusFilter) => api.get(`/admin/users${statusFilter ? `?status=${statusFilter}` : ''}`)
+export const adminGetUser = (userId) => api.get(`/admin/users/${userId}`)
+export const adminApproveUser = (userId, data) => api.patch(`/admin/users/${userId}/approve`, data)
+export const adminRejectUser = (userId) => api.patch(`/admin/users/${userId}/reject`)
+export const adminDeleteUser = (userId) => api.delete(`/admin/users/${userId}`)
+export const adminGetPlanLimits = () => api.get('/admin/plan-limits')
+export const adminGetPlanLimit = (planType) => api.get(`/admin/plan-limits/${planType}`)
+export const adminUpdatePlanLimit = (planType, data) => api.patch(`/admin/plan-limits/${planType}`, data)
+export const adminGetStats = () => api.get('/admin/stats')
+
+// Bots
+export const getBots = () => api.get('/bots')
+export const getBot = (botId) => api.get(`/bots/${botId}`)
+export const createBot = (data) => api.post('/bots', data)
+export const toggleBot = (botId) => api.patch(`/bots/${botId}/toggle`)
+export const deleteBot = (botId) => api.delete(`/bots/${botId}`)
 
 // Dashboard
 export const getDashboard = () => api.get('/dashboard')

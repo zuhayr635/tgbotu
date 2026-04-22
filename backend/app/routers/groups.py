@@ -9,6 +9,7 @@ from typing import Optional
 from app.auth import get_current_user
 from app.database import get_db, AsyncSessionLocal
 from app.models.group import Group
+from app.models.user import User
 from app.services.bot_service import get_bot
 
 logger = logging.getLogger(__name__)
@@ -43,9 +44,9 @@ class GroupUpdate(BaseModel):
 async def list_groups(
     active_only: bool = True,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    query = select(Group).order_by(Group.title)
+    query = select(Group).where(Group.user_id == current_user.id).order_by(Group.title)
     if active_only:
         query = query.where(Group.is_active == True)
     result = await db.execute(query)
@@ -57,9 +58,11 @@ async def update_group(
     group_id: int,
     body: GroupUpdate,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(select(Group).where(Group.id == group_id))
+    result = await db.execute(
+        select(Group).where(Group.id == group_id).where(Group.user_id == current_user.id)
+    )
     group = result.scalar_one_or_none()
     if not group:
         raise HTTPException(404, "Grup bulunamadı")
@@ -79,7 +82,7 @@ class AddGroupRequest(BaseModel):
 async def add_group(
     body: AddGroupRequest,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     bot = get_bot()
     if not bot:
@@ -138,6 +141,7 @@ async def add_group(
             is_admin=is_admin,
             is_active=True,
             is_blacklisted=False,
+            user_id=current_user.id,
         )
         db.add(group)
         await db.commit()
@@ -199,14 +203,16 @@ async def _check_group_permissions(bot, group: Group) -> tuple[bool, str | None,
 @router.post("/check-permissions")
 async def check_all_permissions(
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     """Tüm aktif gruplar için bot'un yetki durumunu Telegram'dan kontrol eder ve günceller."""
     bot = get_bot()
     if not bot:
         raise HTTPException(400, "Bot çalışmıyor")
 
-    result = await db.execute(select(Group).order_by(Group.title))
+    result = await db.execute(
+        select(Group).where(Group.user_id == current_user.id).order_by(Group.title)
+    )
     groups = result.scalars().all()
 
     updated = 0
@@ -283,7 +289,7 @@ async def get_bot_groups(
 @router.post("/detect-groups")
 async def detect_user_groups(
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     """Kullanıcının admin olduğu tüm grupları tespit eder"""
     bot = get_bot()
@@ -292,7 +298,9 @@ async def detect_user_groups(
     
     try:
         # Veritabanındaki tüm aktif grupları getir
-        result = await db.execute(select(Group).where(Group.is_active == True))
+        result = await db.execute(
+            select(Group).where(Group.is_active == True).where(Group.user_id == current_user.id)
+        )
         groups = result.scalars().all()
         
         detected = []
@@ -334,13 +342,15 @@ class PromoteBotRequest(BaseModel):
 async def promote_bot_in_group(
     body: PromoteBotRequest,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Botu yönetici yapma talimatları döndürür.
     Not: Botlar kendilerini yönetici yapamaz, bu işlem manuel yapılmalıdır.
     """
-    result = await db.execute(select(Group).where(Group.id == body.group_id))
+    result = await db.execute(
+        select(Group).where(Group.id == body.group_id).where(Group.user_id == current_user.id)
+    )
     group = result.scalar_one_or_none()
     if not group:
         raise HTTPException(404, "Grup bulunamadı")
@@ -388,7 +398,7 @@ class BulkPromoteRequest(BaseModel):
 async def promote_bot_bulk(
     body: BulkPromoteRequest,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Seçilen gruplar için botu yönetici yapma talimatlarını döndürür.
@@ -405,7 +415,9 @@ async def promote_bot_bulk(
         
         # Seçilen grupları getir
         result = await db.execute(
-            select(Group).where(Group.id.in_(body.group_ids))
+            select(Group)
+            .where(Group.id.in_(body.group_ids))
+            .where(Group.user_id == current_user.id)
         )
         groups = result.scalars().all()
         
@@ -472,7 +484,7 @@ class BulkAddGroupRequest(BaseModel):
 async def add_groups_bulk(
     body: BulkAddGroupRequest,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     """Seçilen grupları toplu olarak ekler"""
     bot = get_bot()
@@ -538,6 +550,7 @@ async def add_groups_bulk(
                     is_admin=is_admin,
                     is_active=True,
                     is_blacklisted=False,
+                    user_id=current_user.id,
                 )
                 db.add(group)
                 await db.commit()
@@ -573,8 +586,13 @@ async def add_groups_bulk(
 @router.get("/tags")
 async def list_tags(
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(select(Group.tag).where(Group.tag.isnot(None)).distinct())
+    result = await db.execute(
+        select(Group.tag)
+        .where(Group.user_id == current_user.id)
+        .where(Group.tag.isnot(None))
+        .distinct()
+    )
     tags = [row[0] for row in result.fetchall() if row[0]]
     return tags

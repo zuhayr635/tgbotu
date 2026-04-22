@@ -20,6 +20,15 @@ export default function LoginPage() {
       form.append('password', password)
       const res = await login(form)
       localStorage.setItem('token', res.data.access_token)
+      // Kullanıcı bilgisini kaydet
+      localStorage.setItem('user', JSON.stringify({
+        id: res.data.user_id,
+        username: res.data.username,
+        email: res.data.email,
+        is_admin: res.data.is_admin,
+        plan_type: res.data.plan_type,
+        tokens: res.data.tokens
+      }))
       toast.success('Giris basarili')
       navigate('/')
     } catch (err) {
@@ -94,6 +103,14 @@ export default function LoginPage() {
               ) : 'Giris Yap'}
             </motion.button>
           </form>
+
+          {/* Register Link */}
+          <p className="text-center text-slate-400 text-sm mt-6">
+            Hesabınız yok mu?{' '}
+            <a href="/register" className="text-indigo-400 hover:text-indigo-300 font-semibold">
+              Kayıt Ol
+            </a>
+          </p>
         </div>
 
         {/* Footer */}

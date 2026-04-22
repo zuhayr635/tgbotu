@@ -9,7 +9,7 @@ import os
 
 from app.database import init_db
 from app.services.scheduler_service import start_scheduler, restore_pending_tasks
-from app.routers import auth, groups, broadcasts, schedules, dashboard, settings, templates
+from app.routers import auth, groups, broadcasts, schedules, dashboard, settings, templates, admin, users, bots
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -77,6 +77,9 @@ app.include_router(schedules.router)
 app.include_router(dashboard.router)
 app.include_router(settings.router)
 app.include_router(templates.router)
+app.include_router(admin.router)
+app.include_router(users.router)
+app.include_router(bots.router)
 
 
 @app.get("/api/health")
