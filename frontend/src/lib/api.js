@@ -41,9 +41,11 @@ export const getGroups = (activeOnly = true) => api.get(`/groups?active_only=${a
 export const updateGroup = (id, data) => api.patch(`/groups/${id}`, data)
 export const getTags = () => api.get('/groups/tags')
 export const addGroup = (chatId) => api.post('/groups/add', { chat_id: String(chatId) })
+export const addGroupsBulk = (groupIds) => api.post('/groups/add-bulk', { group_ids: groupIds })
 export const getBotGroups = () => api.get('/groups/bot-groups')
 export const detectUserGroups = () => api.post('/groups/detect-groups')
-export const promoteBotInGroup = (groupId) => api.post(`/groups/${groupId}/promote-bot`)
+export const promoteBotInGroup = (groupId) => api.post('/groups/promote-bot', { group_id: groupId })
+export const promoteBotBulk = (groupIds) => api.post('/groups/promote-bot-bulk', { group_ids: groupIds })
 export const checkGroupPermissions = () => api.post('/groups/check-permissions')
 
 // Broadcasts

@@ -326,9 +326,13 @@ async def detect_user_groups(
         raise HTTPException(500, f"Tespit hatası: {str(e)}")
 
 
+class PromoteBotRequest(BaseModel):
+    group_id: int
+
+
 @router.post("/promote-bot")
 async def promote_bot_in_group(
-    request: dict,
+    body: PromoteBotRequest,
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user),
 ):
@@ -336,22 +340,7 @@ async def promote_bot_in_group(
     Botu yönetici yapma talimatları döndürür.
     Not: Botlar kendilerini yönetici yapamaz, bu işlem manuel yapılmalıdır.
     """
-    from pydantic import BaseModel
-    
-    class PromoteRequest(BaseModel):
-        group_id: int
-    
-    # Request body'den group_id çek
-    try:
-        body = await request.json() if hasattr(request, 'json') else request
-        group_id = body.get('group_id')
-    except:
-        group_id = request.get('group_id') if isinstance(request, dict) else None
-    
-    if not group_id:
-        raise HTTPException(400, "group_id gerekli")
-    
-    result = await db.execute(select(Group).where(Group.id == group_id))
+    result = await db.execute(select(Group).where(Group.id == body.group_id))
     group = result.scalar_one_or_none()
     if not group:
         raise HTTPException(404, "Grup bulunamadı")
@@ -389,6 +378,196 @@ async def promote_bot_in_group(
         }
     except Exception as e:
         raise HTTPException(500, f"Bilgi alınamadı: {str(e)}")
+
+
+class BulkPromoteRequest(BaseModel):
+    group_ids: list[int]
+
+
+@router.post("/promote-bot-bulk")
+async def promote_bot_bulk(
+    body: BulkPromoteRequest,
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user),
+):
+    """
+    Seçilen gruplar için botu yönetici yapma talimatlarını döndürür.
+    Not: Botlar kendilerini yönetici yapamaz, bu işlem manuel yapılmalıdır.
+    """
+    bot = get_bot()
+    if not bot:
+        raise HTTPException(400, "Bot çalışmıyor")
+    
+    try:
+        me = await bot.get_me()
+        bot_username = me.username
+        bot_id = me.id
+        
+        # Seçilen grupları getir
+        result = await db.execute(
+            select(Group).where(Group.id.in_(body.group_ids))
+        )
+        groups = result.scalars().all()
+        
+        if not groups:
+            raise HTTPException(404, "Grup bulunamadı")
+        
+        # Her grup için bilgileri hazırla
+        group_info = []
+        for group in groups:
+            # Botun bu gruptaki durumunu kontrol et
+            try:
+                member = await bot.get_chat_member(group.chat_id, bot_id)
+                is_member = member.status not in ("left", "kicked")
+                is_admin = member.status in ("administrator", "creator")
+            except Exception:
+                is_member = False
+                is_admin = False
+            
+            group_info.append({
+                "id": group.id,
+                "title": group.title,
+                "username": group.username,
+                "chat_id": group.chat_id,
+                "chat_type": group.chat_type,
+                "is_member": is_member,
+                "is_admin": is_admin,
+                "group_link": f"https://t.me/{group.username}" if group.username else None
+            })
+        
+        return {
+            "bot_username": bot_username,
+            "bot_id": bot_id,
+            "bot_link": f"https://t.me/{bot_username}",
+            "groups": group_info,
+            "instructions": [
+                "1. Her grup için aşağıdaki adımları takip edin:",
+                "2. Gruba gidin → Grup adına tıklayın → 'Yöneticiler'",
+                "3. 'Yönetici Ekle'ye tıklayın",
+                f"4. @{bot_username} kullanıcı adını aratın",
+                "5. Botu seçin ve şu yetkileri verin:",
+                "   - Mesajları sil (Delete Messages)",
+                "   - Üyeleri yasakla (Ban Users)",
+                "   - Grup bilgilerini düzenle (Change Group Info)",
+                "   - Üye ekle (Invite Users)",
+                "   - Mesajları sabitle (Pin Messages)",
+                "   - NOT: 'Yönetici Ekleme' yetkisi VERMEYİN (güvenlik için)",
+                "6. Onaylayın",
+                "",
+                "⚠️ ÖNEMLİ: Bot anonim modda çalışacak, yönetici işlemleri grupta görünmeyecek."
+            ],
+            "total": len(group_info),
+            "already_admin": sum(1 for g in group_info if g["is_admin"]),
+            "not_member": sum(1 for g in group_info if not g["is_member"])
+        }
+    except Exception as e:
+        raise HTTPException(500, f"Bilgi alınamadı: {str(e)}")
+
+
+class BulkAddGroupRequest(BaseModel):
+    group_ids: list[str]  # chat_id (sayı) veya @username
+
+
+@router.post("/add-bulk")
+async def add_groups_bulk(
+    body: BulkAddGroupRequest,
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user),
+):
+    """Seçilen grupları toplu olarak ekler"""
+    bot = get_bot()
+    if not bot:
+        raise HTTPException(400, "Bot çalışmıyor, önce botu başlatın")
+
+    results = []
+    
+    for chat_identifier_str in body.group_ids:
+        try:
+            # chat_id veya @username
+            try:
+                chat_identifier = int(chat_identifier_str)
+            except ValueError:
+                chat_identifier = chat_identifier_str  # @username string
+            
+            chat = await bot.get_chat(chat_identifier)
+            
+            # Bot üye mi kontrol et
+            try:
+                me = await bot.get_me()
+                member = await bot.get_chat_member(chat.id, me.id)
+                member_status = member.status
+                is_admin = member_status in ("administrator", "creator")
+            except Exception:
+                is_admin = False
+                member_status = "member"
+            
+            # Üye sayısı
+            try:
+                member_count = await bot.get_chat_member_count(chat.id)
+            except Exception:
+                member_count = 0
+            
+            chat_type = chat.type if hasattr(chat, "type") else "group"
+            
+            # Upsert
+            result_query = await db.execute(select(Group).where(Group.chat_id == chat.id))
+            existing = result_query.scalar_one_or_none()
+            
+            if existing:
+                existing.title = chat.title or str(chat.id)
+                existing.username = chat.username
+                existing.chat_type = chat_type
+                existing.member_count = member_count
+                existing.is_admin = is_admin
+                existing.is_active = True
+                existing.is_blacklisted = False
+                await db.commit()
+                results.append({
+                    "success": True,
+                    "chat_id": chat.id,
+                    "title": chat.title or str(chat.id),
+                    "message": "Güncellendi"
+                })
+            else:
+                group = Group(
+                    chat_id=chat.id,
+                    title=chat.title or str(chat.id),
+                    username=chat.username,
+                    chat_type=chat_type,
+                    member_count=member_count,
+                    is_admin=is_admin,
+                    is_active=True,
+                    is_blacklisted=False,
+                )
+                db.add(group)
+                await db.commit()
+                results.append({
+                    "success": True,
+                    "chat_id": chat.id,
+                    "title": chat.title or str(chat.id),
+                    "message": "Eklendi"
+                })
+            
+            # Rate limit aşmamak için kısa bekleme
+            await asyncio.sleep(0.5)
+            
+        except Exception as e:
+            results.append({
+                "success": False,
+                "chat_id": chat_identifier_str,
+                "error": str(e)
+            })
+    
+    successful = sum(1 for r in results if r.get("success"))
+    failed = len(results) - successful
+    
+    return {
+        "message": f"{successful} grup eklendi, {failed} başarısız",
+        "total": len(results),
+        "successful": successful,
+        "failed": failed,
+        "results": results
+    }
 
 
 @router.get("/tags")

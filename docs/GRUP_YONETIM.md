@@ -18,8 +18,15 @@ Bu özellik, Telegram botunuzun yönettiği grupları otomatik tespit etmenizi v
 - Kanallar için "Mesaj Gönder" yetkisini kontrol eder
 - Kısıtlama bilgilerini günceller
 
-### 3. Botu Yönetici Yap
-- Her grup için adım adım yönetici yapma talimatları sunar
+### 3. Çoklu Seçim ve Toplu İşlemler
+- Birden fazla grubu aynı anda seçme
+- Seçilen gruplara toplu olarak bot ekleme
+- Seçim durumunu görsel olarak takip etme
+- Hızlı işlem için kısayollar
+
+### 4. Botu Yönetici Yap
+- Tek grup için adım adım yönetici yapma talimatları
+- Çoklu grup için toplu yönetici yapma talimatları
 - Doğru yetkileri seçmenize yardımcı olur
 - Güvenlik uyarıları içerir
 - Anonim mod hakkında bilgi verir
@@ -39,7 +46,7 @@ Bu özellik, Telegram botunuzun yönettiği grupları otomatik tespit etmenizi v
 2. Sistem her grubun yetki durumunu kontrol eder
 3. Sonuçlar otomatik olarak güncellenir
 
-### Botu Yönetici Yapma
+### Botu Yönetici Yapma (Tek Grup)
 
 1. **Grup kartında "Admin Yap" butonuna tıklayın**
 2. Açılan modal'da adımları takip edin:
@@ -53,6 +60,16 @@ Bu özellik, Telegram botunuzun yönettiği grupları otomatik tespit etmenizi v
      - ✅ Üye ekle (Invite Users)
      - ✅ Mesajları sabitle (Pin Messages)
      - ❌ Yönetici Ekleme (Add Admin) - VERMEYİN!
+
+### Botu Yönetici Yapma (Çoklu Grup)
+
+1. **Grup kartlarına tıklayarak birden fazla grup seçin**
+2. **Üstte çıkan "Seçilenlere Botu Ekle" butonuna tıklayın**
+3. **Açılan modal'da:**
+   - Seçilen grupları ve durumlarını inceleyin
+   - Her grup için talimatları takip edin
+   - Zaten admin olan grupları atlayabilirsiniz
+   - Üye olmayan grupları önce eklemeniz gerekebilir
 
 ## 🔒 Güvenlik
 
@@ -117,7 +134,7 @@ Tüm grupların yetki durumunu kontrol eder.
 ```
 
 #### `POST /api/groups/promote-bot`
-Botu yönetici yapma talimatlarını döndürür.
+Tek bir grup için botu yönetici yapma talimatlarını döndürür.
 
 **Request:**
 ```json
@@ -143,6 +160,45 @@ Botu yönetici yapma talimatlarını döndürür.
 }
 ```
 
+#### `POST /api/groups/promote-bot-bulk`
+Seçilen gruplar için botu yönetici yapma talimatlarını döndürür.
+
+**Request:**
+```json
+{
+  "group_ids": [1, 2, 3]
+}
+```
+
+**Response:**
+```json
+{
+  "bot_username": "my_bot",
+  "bot_id": 123456789,
+  "bot_link": "https://t.me/my_bot",
+  "groups": [
+    {
+      "id": 1,
+      "title": "Örnek Grup",
+      "username": "ornek_grup",
+      "chat_id": -100123456789,
+      "chat_type": "supergroup",
+      "is_member": true,
+      "is_admin": false,
+      "group_link": "https://t.me/ornek_grup"
+    }
+  ],
+  "instructions": [
+    "1. Her grup için aşağıdaki adımları takip edin:",
+    "2. Gruba gidin → Grup adına tıklayın → 'Yöneticiler'",
+    ...
+  ],
+  "total": 3,
+  "already_admin": 1,
+  "not_member": 0
+}
+```
+
 ### Frontend Bileşenleri
 
 #### GroupsPage.jsx
@@ -152,14 +208,22 @@ Ana grup yönetim sayfası. Şu özellikleri içerir:
 - Arama
 - Grup tespit butonu
 - Yetki kontrol butonu
-- Botu yönetici yapma modal'ı
+- Çoklu seçim özelliği
+- Toplu işlemler barı
+- Tek ve çoklu bot ekleme modal'ları
 
-#### Modal Bileşeni
-Botu yönetici yapma adımlarını gösteren modal:
-- Grup bilgileri
-- Adım adım talimatlar
-- Grup ve bot linkleri
-- Güvenlik uyarıları
+#### Modal Bileşenleri
+1. **Tek Grup Modal'ı**: Botu yönetici yapma adımlarını gösteren modal
+   - Grup bilgileri
+   - Adım adım talimatlar
+   - Grup ve bot linkleri
+   - Güvenlik uyarıları
+
+2. **Çoklu Grup Modal'ı**: Seçilen gruplar için özet ve talimatlar
+   - Grup sayısı özeti
+   - Her grubun durumu (admin/üye değil/hazır)
+   - Toplu talimatlar
+   - Güvenlik uyarıları
 
 ## 📝 Notlar
 
@@ -187,6 +251,13 @@ Botu yönetici yapma adımlarını gösteren modal:
 - Grup ayarlarında botun mesaj göndermesine izin verildiğinden emin olun
 
 ## 🔄 Güncellemeler
+
+### v2.0.0
+- Çoklu seçim özelliği eklendi
+- Toplu bot ekleme özelliği eklendi
+- Seçim görselleştirmesi iyileştirildi
+- Toplu işlemler barı eklendi
+- Yeni API endpoint'leri eklendi
 
 ### v1.0.0
 - İlk sürüm

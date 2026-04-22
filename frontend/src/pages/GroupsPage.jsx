@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { getGroups, updateGroup, addGroup, detectUserGroups, promoteBotInGroup, checkGroupPermissions } from '../lib/api'
+import { getGroups, updateGroup, addGroup, detectUserGroups, promoteBotInGroup, promoteBotBulk, checkGroupPermissions } from '../lib/api'
 import toast from 'react-hot-toast'
-import { Users, Plus, Search, RefreshCw, Globe, Lock, Edit2, Trash2, ExternalLink, Shield, CheckCircle, XCircle, AlertCircle, Crown } from 'lucide-react'
+import { Users, Plus, Search, RefreshCw, Globe, Lock, Edit2, Trash2, ExternalLink, Shield, CheckCircle, XCircle, AlertCircle, Crown, Check, X } from 'lucide-react'
 
 const TYPE_COLOR = {
   group: { color: '#6366f1', bg: 'bg-indigo-500/20', text: 'text-indigo-400', label: 'Grup' },
@@ -25,11 +25,16 @@ export default function GroupsPage() {
   const [selectedGroup, setSelectedGroup] = useState(null)
   const [promoteInfo, setPromoteInfo] = useState(null)
   const [checking, setChecking] = useState(false)
+  const [selectedGroups, setSelectedGroups] = useState(new Set())
+  const [bulkPromoting, setBulkPromoting] = useState(false)
+  const [showBulkPromoteModal, setShowBulkPromoteModal] = useState(false)
+  const [bulkPromoteInfo, setBulkPromoteInfo] = useState(null)
 
   const load = async () => {
     try {
       const res = await getGroups(false)
       setGroups(res.data)
+      setSelectedGroups(new Set())
     } catch { toast.error('Yuklenemedi') }
   }
 
@@ -100,6 +105,43 @@ export default function GroupsPage() {
     }
   }
 
+  const toggleGroupSelection = (groupId) => {
+    const newSelected = new Set(selectedGroups)
+    if (newSelected.has(groupId)) {
+      newSelected.delete(groupId)
+    } else {
+      newSelected.add(groupId)
+    }
+    setSelectedGroups(newSelected)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedGroups.size === filtered.length) {
+      setSelectedGroups(new Set())
+    } else {
+      setSelectedGroups(new Set(filtered.map(g => g.id)))
+    }
+  }
+
+  const handleBulkPromote = async () => {
+    if (selectedGroups.size === 0) {
+      toast.error('Lütfen en az bir grup seçin')
+      return
+    }
+
+    setBulkPromoting(true)
+    try {
+      const groupIds = Array.from(selectedGroups)
+      const res = await promoteBotBulk(groupIds)
+      setBulkPromoteInfo(res.data)
+      setShowBulkPromoteModal(true)
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'İşlem başarısız')
+    } finally {
+      setBulkPromoting(false)
+    }
+  }
+
   const filtered = groups.filter(g => {
     const matchSearch = g.title.toLowerCase().includes(search.toLowerCase())
     if (!matchSearch) return false
@@ -132,6 +174,7 @@ export default function GroupsPage() {
           </h1>
           <p className="text-slate-400 mt-1">
             {groups.length} kayitli · <span className="text-emerald-400">{activeCount} aktif</span> · <span className="text-rose-400">{inactiveCount} bot yok</span> · {adminCount} admin
+            {selectedGroups.size > 0 && <span className="text-indigo-400 ml-2">· {selectedGroups.size} seçili</span>}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -285,6 +328,50 @@ export default function GroupsPage() {
         </motion.button>
       </motion.div>
 
+      {/* Bulk Actions Bar */}
+      {selectedGroups.size > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl border border-indigo-500/30 p-4 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold">
+              {selectedGroups.size}
+            </div>
+            <div>
+              <p className="text-white font-semibold">{selectedGroups.size} grup seçildi</p>
+              <p className="text-slate-400 text-sm">Toplu işlemler için bir aksiyon seçin</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedGroups(new Set())}
+              className="px-4 py-2 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors text-sm font-semibold"
+            >
+              Temizle
+            </button>
+            <button
+              onClick={handleBulkPromote}
+              disabled={bulkPromoting}
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:opacity-90 transition-opacity text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
+            >
+              {bulkPromoting ? (
+                <>
+                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  İşleniyor...
+                </>
+              ) : (
+                <>
+                  <Crown className="w-4 h-4" />
+                  Seçilenlere Botu Ekle
+                </>
+              )}
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Groups Grid */}
       {filtered.length === 0 ? (
         <motion.div
@@ -302,21 +389,42 @@ export default function GroupsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filtered.map((g, index) => {
             const tc = TYPE_COLOR[g.chat_type] || TYPE_COLOR.group
+            const isSelected = selectedGroups.has(g.id)
             return (
               <motion.div
                 key={g.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 * index }}
-                className={`bg-[#1e1e3a] rounded-2xl border p-5 transition-all ${
-                  !g.is_active
+                className={`bg-[#1e1e3a] rounded-2xl border p-5 transition-all cursor-pointer ${
+                  isSelected
+                    ? 'border-indigo-500 bg-indigo-500/10'
+                    : !g.is_active
                     ? 'border-rose-500/20 opacity-65'
                     : g.is_blacklisted
                     ? 'border-amber-500/20 opacity-65'
                     : 'border-indigo-500/20'
                 }`}
-                style={{ borderLeft: `3px solid ${!g.is_active ? '#ef4444' : g.is_blacklisted ? '#f59e0b' : '#22c55e'}` }}
+                style={{ 
+                  borderLeft: `3px solid ${
+                    isSelected 
+                      ? '#6366f1'
+                      : !g.is_active 
+                      ? '#ef4444' 
+                      : g.is_blacklisted 
+                      ? '#f59e0b' 
+                      : '#22c55e'
+                  }`
+                }}
+                onClick={() => toggleGroupSelection(g.id)}
               >
+                {/* Selection Checkbox */}
+                {selectedGroups.size > 0 && (
+                  <div className="absolute top-4 right-4 w-5 h-5 rounded border-2 border-indigo-500 flex items-center justify-center bg-indigo-500/20">
+                    {isSelected && <Check className="w-4 h-4 text-indigo-400" />}
+                  </div>
+                )}
+
                 {/* Type badge */}
                 <div className="flex items-start justify-between mb-4">
                   <div className={`w-12 h-12 rounded-xl ${tc.bg} border ${tc.color}22 flex items-center justify-center ${tc.text}`}>
@@ -375,7 +483,7 @@ export default function GroupsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 pt-3 border-t border-indigo-500/10">
+                <div className="flex items-center gap-2 pt-3 border-t border-indigo-500/10" onClick={e => e.stopPropagation()}>
                   <input
                     value={editTag[g.id] !== undefined ? editTag[g.id] : (g.tag || '')}
                     onChange={e => setEditTag({ ...editTag, [g.id]: e.target.value })}
@@ -524,6 +632,131 @@ export default function GroupsPage() {
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold hover:opacity-90 transition-opacity"
               >
                 Tamam, Yetkileri Verdim
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Bulk Promote Modal */}
+      {showBulkPromoteModal && bulkPromoteInfo && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowBulkPromoteModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#1e1e3a] rounded-2xl border border-purple-500/30 p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-white" />
+                </div>
+                {bulkPromoteInfo.groups.length} Gruba Botu Ekle
+              </h2>
+              <button
+                onClick={() => setShowBulkPromoteModal(false)}
+                className="p-2 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Summary */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-indigo-500/10 rounded-lg p-3 border border-indigo-500/20">
+                  <p className="text-indigo-300 font-semibold text-sm">Toplam Grup</p>
+                  <p className="text-white text-2xl font-bold">{bulkPromoteInfo.total}</p>
+                </div>
+                <div className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+                  <p className="text-amber-300 font-semibold text-sm">Zaten Admin</p>
+                  <p className="text-white text-2xl font-bold">{bulkPromoteInfo.already_admin}</p>
+                </div>
+                <div className="bg-rose-500/10 rounded-lg p-3 border border-rose-500/20">
+                  <p className="text-rose-300 font-semibold text-sm">Üye Değil</p>
+                  <p className="text-white text-2xl font-bold">{bulkPromoteInfo.not_member}</p>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div className="bg-[#16162a] rounded-xl p-4 border border-indigo-500/20">
+                <p className="text-indigo-300 font-semibold mb-3">Yapılacak İşlemler:</p>
+                <ol className="space-y-2 text-slate-300 text-sm">
+                  {bulkPromoteInfo.instructions.map((step, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-indigo-400">•</span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/* Groups List */}
+              <div className="bg-[#16162a] rounded-xl p-4 border border-indigo-500/20">
+                <p className="text-indigo-300 font-semibold mb-3">Seçilen Gruplar:</p>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {bulkPromoteInfo.groups.map((group, idx) => (
+                    <div key={idx} className="flex items-start gap-3 p-2 bg-indigo-500/5 rounded-lg border border-indigo-500/10">
+                      <div className="flex-shrink-0 mt-0.5">
+                        {group.is_admin ? (
+                          <CheckCircle className="w-5 h-5 text-emerald-400" />
+                        ) : !group.is_member ? (
+                          <AlertCircle className="w-5 h-5 text-rose-400" />
+                        ) : (
+                          <Crown className="w-5 h-5 text-amber-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-semibold text-sm truncate">{group.title}</p>
+                        {group.username && <p className="text-slate-400 text-xs">@{group.username}</p>}
+                        <p className="text-slate-500 text-xs">
+                          {group.is_admin && 'Zaten Admin'}
+                          {!group.is_member && 'Üye Değil'}
+                          {!group.is_admin && group.is_member && 'Hazır'}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Warning */}
+              <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-amber-300 font-semibold mb-2">Önemli Not</p>
+                    <p className="text-slate-400 text-sm">
+                      Her gruba giderek botu yönetici yapmanız gerekecektir. Telegram API'sinin kısıtlamaları nedeniyle bu işlem otomatik yapılamaz.
+                      Bot anonim olarak çalışacak şekilde yapılandırıldığından "Yönetici Ekleme" yetkisi vermediğinizden emin olun.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowBulkPromoteModal(false)}
+                className="px-6 py-3 rounded-xl bg-slate-500/20 text-slate-300 hover:bg-slate-500/30 transition-colors font-semibold"
+              >
+                Kapat
+              </button>
+              <button
+                onClick={() => {
+                  setShowBulkPromoteModal(false)
+                  setSelectedGroups(new Set())
+                  load()
+                }}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold hover:opacity-90 transition-opacity"
+              >
+                Tamam, Anladım
               </button>
             </div>
           </motion.div>
