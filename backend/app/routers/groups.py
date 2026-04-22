@@ -251,7 +251,144 @@ async def check_all_permissions(
 async def get_bot_groups(
     _: str = Depends(get_current_user),
 ):
-    return {"message": "Gruplar my_chat_member eventi ile otomatik eklenir."}
+    """Bot'un üye olduğu tüm grupları Telegram'dan çeker"""
+    bot = get_bot()
+    if not bot:
+        raise HTTPException(400, "Bot çalışmıyor")
+    
+    try:
+        from app.bot.handlers import user_detected_groups
+        
+        # Tüm tespit edilen grupları getir
+        all_groups = []
+        for user_id, chat_ids in user_detected_groups.items():
+            for chat_id in chat_ids:
+                try:
+                    chat = await bot.get_chat(chat_id)
+                    all_groups.append({
+                        "chat_id": chat.id,
+                        "title": chat.title or str(chat.id),
+                        "username": getattr(chat, "username", None),
+                        "type": chat.type,
+                        "detected_by_user": user_id
+                    })
+                except Exception as e:
+                    logger.warning(f"Grup bilgisi alınamadı {chat_id}: {e}")
+        
+        return {"groups": all_groups}
+    except Exception as e:
+        raise HTTPException(500, f"Gruplar alınamadı: {str(e)}")
+
+
+@router.post("/detect-groups")
+async def detect_user_groups(
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user),
+):
+    """Kullanıcının admin olduğu tüm grupları tespit eder"""
+    bot = get_bot()
+    if not bot:
+        raise HTTPException(400, "Bot çalışmıyor")
+    
+    try:
+        # Veritabanındaki tüm aktif grupları getir
+        result = await db.execute(select(Group).where(Group.is_active == True))
+        groups = result.scalars().all()
+        
+        detected = []
+        for group in groups:
+            try:
+                # Botun bu gruptaki durumunu kontrol et
+                me = await bot.get_me()
+                member = await bot.get_chat_member(group.chat_id, me.id)
+                
+                # Grup yöneticilerini al
+                admins = await bot.get_chat_administrators(group.chat_id)
+                
+                detected.append({
+                    "id": group.id,
+                    "chat_id": group.chat_id,
+                    "title": group.title,
+                    "username": group.username,
+                    "chat_type": group.chat_type.value,
+                    "member_count": group.member_count,
+                    "is_admin": group.is_admin,
+                    "can_post": group.can_post,
+                    "restrict_info": group.restrict_info,
+                    "bot_status": member.status,
+                    "admin_count": len(admins)
+                })
+            except Exception as e:
+                logger.warning(f"Grup tespit hatası {group.chat_id}: {e}")
+        
+        return {"detected": len(detected), "groups": detected}
+    except Exception as e:
+        raise HTTPException(500, f"Tespit hatası: {str(e)}")
+
+
+@router.post("/promote-bot")
+async def promote_bot_in_group(
+    request: dict,
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user),
+):
+    """
+    Botu yönetici yapma talimatları döndürür.
+    Not: Botlar kendilerini yönetici yapamaz, bu işlem manuel yapılmalıdır.
+    """
+    from pydantic import BaseModel
+    
+    class PromoteRequest(BaseModel):
+        group_id: int
+    
+    # Request body'den group_id çek
+    try:
+        body = await request.json() if hasattr(request, 'json') else request
+        group_id = body.get('group_id')
+    except:
+        group_id = request.get('group_id') if isinstance(request, dict) else None
+    
+    if not group_id:
+        raise HTTPException(400, "group_id gerekli")
+    
+    result = await db.execute(select(Group).where(Group.id == group_id))
+    group = result.scalar_one_or_none()
+    if not group:
+        raise HTTPException(404, "Grup bulunamadı")
+    
+    bot = get_bot()
+    if not bot:
+        raise HTTPException(400, "Bot çalışmıyor")
+    
+    try:
+        me = await bot.get_me()
+        bot_username = me.username
+        
+        return {
+            "message": "Botu yönetici yapmak için şu adımları izleyin:",
+            "group_title": group.title,
+            "group_username": group.username,
+            "bot_username": bot_username,
+            "instructions": [
+                f"1. {group.title} grubuna gidin",
+                f"2. Grup adına tıklayın → 'Yöneticiler' veya 'Manage'",
+                f"3. 'Yönetici Ekle'ye tıklayın",
+                f"4. @{bot_username} kullanıcı adını aratın",
+                f"5. Botu seçin ve şu yetkileri verin:",
+                f"   - Mesajları sil (Delete Messages)",
+                f"   - Üyeleri yasakla (Ban Users)",
+                f"   - Grup bilgilerini düzenle (Change Group Info)",
+                f"   - Üye ekle (Invite Users)",
+                f"   - Pin messages (Mesajları sabitle)",
+                f"   - NOT: 'Yönetici Ekleme' yetkisi VERMEYİN (güvenlik için)",
+                f"6. Onaylayın"
+            ],
+            "bot_link": f"https://t.me/{bot_username}",
+            "group_link": f"https://t.me/{group.username}" if group.username else None,
+            "note": "Bot anonim olarak çalışacak, yönetici işlemleri görünmeyecek"
+        }
+    except Exception as e:
+        raise HTTPException(500, f"Bilgi alınamadı: {str(e)}")
 
 
 @router.get("/tags")

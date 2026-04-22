@@ -1,5 +1,5 @@
 from aiogram import Router
-from aiogram.types import ChatMemberUpdated
+from aiogram.types import ChatMemberUpdated, Message
 from aiogram.enums import ChatMemberStatus
 from sqlalchemy import select
 from app.database import AsyncSessionLocal
@@ -7,6 +7,9 @@ from app.models.group import Group, ChatType
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Tüm admin yapılan grupları takip et
+user_detected_groups = {}  # user_id -> set(chat_id)
 
 
 async def upsert_group(chat_id: int, title: str, username: str | None,
@@ -56,8 +59,46 @@ async def on_my_chat_member(event: ChatMemberUpdated):
         logger.info(f"Bot cikarildi: {title}")
 
 
+async def on_message(message: Message):
+    """Kullanıcının admin olduğu grupları tespit et"""
+    if not message.chat or not message.from_user:
+        return
+    
+    # Sadece grup/supergroup/kanal mesajlarında çalış
+    if message.chat.type not in ("group", "supergroup", "channel"):
+        return
+    
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    
+    # Kullanıcının grup yöneticileri listesinden kontrol et
+    try:
+        from aiogram.services.bot_command import BotCommandScopeChat
+        administrators = await message.bot.get_chat_administrators(chat_id)
+        is_admin = any(admin.user.id == user_id for admin in administrators)
+        
+        if is_admin:
+            # Kullanıcı admin, grubu kaydet
+            if user_id not in user_detected_groups:
+                user_detected_groups[user_id] = set()
+            user_detected_groups[user_id].add(chat_id)
+            
+            # Veritabanına ekle/güncelle
+            await upsert_group(
+                chat_id,
+                message.chat.title or str(chat_id),
+                getattr(message.chat, "username", None),
+                message.chat.type,
+                True,
+                True  # Admin olarak işaretle
+            )
+    except Exception as e:
+        logger.debug(f"Admin tespit hatası {chat_id}: {e}")
+
+
 def create_router() -> Router:
     """Her bot baslatmada fresh router olustur — tekrar attach hatasini onler"""
     router = Router()
     router.my_chat_member()(on_my_chat_member)
+    router.message()(on_message)
     return router

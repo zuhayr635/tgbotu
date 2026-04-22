@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { getGroups, updateGroup, addGroup } from '../lib/api'
+import { getGroups, updateGroup, addGroup, detectUserGroups, promoteBotInGroup, checkGroupPermissions } from '../lib/api'
 import toast from 'react-hot-toast'
-import { Users, Plus, Search, RefreshCw, Globe, Lock, Edit2, Trash2, ExternalLink } from 'lucide-react'
+import { Users, Plus, Search, RefreshCw, Globe, Lock, Edit2, Trash2, ExternalLink, Shield, CheckCircle, XCircle, AlertCircle, Crown } from 'lucide-react'
 
 const TYPE_COLOR = {
   group: { color: '#6366f1', bg: 'bg-indigo-500/20', text: 'text-indigo-400', label: 'Grup' },
@@ -20,6 +20,11 @@ export default function GroupsPage() {
   const [addInput, setAddInput] = useState('')
   const [adding, setAdding] = useState(false)
   const [filter, setFilter] = useState('all')
+  const [detecting, setDetecting] = useState(false)
+  const [showPromoteModal, setShowPromoteModal] = useState(false)
+  const [selectedGroup, setSelectedGroup] = useState(null)
+  const [promoteInfo, setPromoteInfo] = useState(null)
+  const [checking, setChecking] = useState(false)
 
   const load = async () => {
     try {
@@ -57,6 +62,44 @@ export default function GroupsPage() {
     }
   }
 
+  const handleDetectGroups = async () => {
+    setDetecting(true)
+    try {
+      const res = await detectUserGroups()
+      toast.success(`${res.data.detected} grup tespit edildi`)
+      load()
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Tespit başarısız')
+    } finally {
+      setDetecting(false)
+    }
+  }
+
+  const handleCheckPermissions = async () => {
+    setChecking(true)
+    try {
+      const res = await checkGroupPermissions()
+      toast.success(`${res.data.checked} grup kontrol edildi`)
+      load()
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Kontrol başarısız')
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  const handlePromoteBot = async (group) => {
+    setSelectedGroup(group)
+    setShowPromoteModal(true)
+    try {
+      const res = await promoteBotInGroup(group.id)
+      setPromoteInfo(res.data)
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Bilgi alınamadı')
+      setShowPromoteModal(false)
+    }
+  }
+
   const filtered = groups.filter(g => {
     const matchSearch = g.title.toLowerCase().includes(search.toLowerCase())
     if (!matchSearch) return false
@@ -91,21 +134,61 @@ export default function GroupsPage() {
             {groups.length} kayitli · <span className="text-emerald-400">{activeCount} aktif</span> · <span className="text-rose-400">{inactiveCount} bot yok</span> · {adminCount} admin
           </p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setShowAdd(!showAdd)}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium shadow-lg ${
-            showAdd
-              ? 'bg-rose-500/20 text-rose-400 shadow-rose-500/30'
-              : 'btn-gradient text-white shadow-indigo-500/30'
-          }`}
-        >
-          {showAdd
-            ? <><ExternalLink className="w-5 h-5" /> Iptal</>
-            : <><Plus className="w-5 h-5" /> Grup Ekle</>
-          }
-        </motion.button>
+        <div className="flex items-center gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleDetectGroups}
+            disabled={detecting}
+            className="flex items-center gap-2 px-4 py-3 rounded-xl font-medium bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-50"
+          >
+            {detecting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+                Tespit Ediliyor...
+              </>
+            ) : (
+              <>
+                <Shield className="w-5 h-5" />
+                Grupları Tespit Et
+              </>
+            )}
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleCheckPermissions}
+            disabled={checking}
+            className="flex items-center gap-2 px-4 py-3 rounded-xl font-medium bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all disabled:opacity-50"
+          >
+            {checking ? (
+              <>
+                <div className="w-4 h-4 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                Kontrol Ediliyor...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                Yetkileri Kontrol Et
+              </>
+            )}
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowAdd(!showAdd)}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium shadow-lg ${
+              showAdd
+                ? 'bg-rose-500/20 text-rose-400 shadow-rose-500/30'
+                : 'btn-gradient text-white shadow-indigo-500/30'
+            }`}
+          >
+            {showAdd
+              ? <><ExternalLink className="w-5 h-5" /> Iptal</>
+              : <><Plus className="w-5 h-5" /> Grup Ekle</>
+            }
+          </motion.button>
+        </div>
       </motion.div>
 
       {/* Add Group Panel */}
@@ -305,6 +388,15 @@ export default function GroupsPage() {
                   >
                     Kaydet
                   </button>
+                  {!g.is_admin && g.is_active && (
+                    <button
+                      onClick={() => handlePromoteBot(g)}
+                      className="px-3 py-2 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors text-xs font-semibold flex items-center gap-1"
+                    >
+                      <Crown className="w-3 h-3" />
+                      Admin Yap
+                    </button>
+                  )}
                   <button
                     onClick={() => handleBlacklist(g.id, g.is_blacklisted)}
                     className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
@@ -320,6 +412,122 @@ export default function GroupsPage() {
             )
           })}
         </div>
+      )}
+
+      {/* Promote Bot Modal */}
+      {showPromoteModal && promoteInfo && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowPromoteModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#1e1e3a] rounded-2xl border border-purple-500/30 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-white" />
+                </div>
+                Botu Yönetici Yap
+              </h2>
+              <button
+                onClick={() => setShowPromoteModal(false)}
+                className="p-2 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/20">
+                <p className="text-purple-300 font-semibold mb-2">{promoteInfo.group_title}</p>
+                <p className="text-slate-400 text-sm">
+                  Bot kullanıcı adı: <span className="text-white font-mono">@{promoteInfo.bot_username}</span>
+                </p>
+              </div>
+
+              <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-amber-300 font-semibold mb-2">Önemli Not</p>
+                    <p className="text-slate-400 text-sm">
+                      Botlar kendilerini yönetici yapamazlar. Bu işlemi manuel olarak yapmanız gerekmektedir.
+                      Aşağıdaki adımları takip edin.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#16162a] rounded-xl p-4 border border-indigo-500/20">
+                <p className="text-indigo-300 font-semibold mb-3">Adımlar:</p>
+                <ol className="space-y-2 text-slate-300 text-sm">
+                  {promoteInfo.instructions.map((step, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span dangerouslySetInnerHTML={{ __html: step.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>').replace(/`([^`]+)`/g, '<code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300">$1</code>') }} />
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {promoteInfo.group_link && (
+                  <a
+                    href={promoteInfo.group_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 px-4 py-3 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors text-center font-semibold flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Gruba Git
+                  </a>
+                )}
+                <a
+                  href={promoteInfo.bot_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 px-4 py-3 rounded-xl bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors text-center font-semibold flex items-center justify-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Botu Görüntüle
+                </a>
+              </div>
+
+              <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-emerald-300 font-semibold mb-1">Anonim Mod</p>
+                    <p className="text-slate-400 text-sm">
+                      Bot anonim olarak çalışacak, yönetici işlemleri grupta görünmeyecek.
+                      "Yönetici Ekleme" yetkisi vermediğinizden emin olun (güvenlik için).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowPromoteModal(false)
+                  load()
+                }}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold hover:opacity-90 transition-opacity"
+              >
+                Tamam, Yetkileri Verdim
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
     </div>
   )
