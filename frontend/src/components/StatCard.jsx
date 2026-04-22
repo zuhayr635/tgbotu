@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { lucideIconType } from 'lucide-react'
 
 const colorMap = {
   indigo: { bg: 'bg-indigo-500/20', text: 'text-indigo-400', border: 'border-indigo-500/30' },
