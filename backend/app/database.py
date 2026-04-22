@@ -137,8 +137,15 @@ async def init_db():
         admin_username = settings.admin_username or 'admin'
         # Şifre hash: zuhayr635:bana1kolaal -> $2b$12$4tDhWulynaeTyhwI20o1TuPpZ3ScY2KctD.qPgT2p/Uyi4M25mAOS
         password_hash = '$2b$12$4tDhWulynaeTyhwI20o1TuPpZ3ScY2KctD.qPgT2p/Uyi4M25mAOS'
+        admin_email = f'{admin_username}@localhost'
         await conn.execute(text(f"""
             INSERT INTO users (username, email, password_hash, is_admin, approval_status, plan_type, tokens)
-            VALUES ('{admin_username}', 'admin@localhost', '{password_hash}', true, 'approved', 'free', 1000)
-            ON CONFLICT (username) DO NOTHING
+            VALUES ('{admin_username}', '{admin_email}', '{password_hash}', true, 'approved', 'free', 1000)
+            ON CONFLICT (username) DO UPDATE SET
+                email = '{admin_email}',
+                password_hash = '{password_hash}',
+                is_admin = true,
+                approval_status = 'approved',
+                plan_type = 'free',
+                tokens = 1000
         """))
