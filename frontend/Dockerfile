@@ -8,7 +8,7 @@ COPY package.json ./
 # Install dependencies
 RUN npm install
 
-# Copy source files
+# Copy all source files
 COPY . .
 
 # Build the application
