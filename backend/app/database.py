@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from app.config import get_settings
+from app.auth import get_password_hash
 
 settings = get_settings()
 
@@ -135,8 +136,8 @@ async def init_db():
         
         # Default admin kullanıcısı oluştur (eğer yoksa)
         admin_username = settings.admin_username or 'admin'
-        # Şifre hash: zuhayr635:bana1kolaal -> $2b$12$4tDhWulynaeTyhwI20o1TuPpZ3ScY2KctD.qPgT2p/Uyi4M25mAOS
-        password_hash = '$2b$12$4tDhWulynaeTyhwI20o1TuPpZ3ScY2KctD.qPgT2p/Uyi4M25mAOS'
+        # Şifre hash: bana1kolaal
+        password_hash = get_password_hash(settings.admin_password)
         admin_email = f'{admin_username}@localhost'
         await conn.execute(text(f"""
             INSERT INTO users (username, email, password_hash, is_admin, approval_status, plan_type, tokens)
